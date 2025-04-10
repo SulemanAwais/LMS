@@ -3,6 +3,11 @@ from django.contrib.auth.models import AbstractUser
 
 
 # User with roles
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+
+# User with roles and verification for Librarians
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -11,19 +16,21 @@ class User(AbstractUser):
     )
     groups = models.ManyToManyField(
         'auth.Group',
-        related_name='core_user_set',  # Custom related name to avoid conflict
+        related_name='core_user_set',
         blank=True,
         help_text='The groups this user belongs to.'
     )
 
     user_permissions = models.ManyToManyField(
         'auth.Permission',
-        related_name='core_user_permissions_set',  # Custom related name
+        related_name='core_user_permissions_set',
         blank=True,
         help_text='Specific permissions for this user.'
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     joined_date = models.DateField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.username} ({self.role})"

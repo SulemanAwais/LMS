@@ -1,275 +1,101 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Library System - Home</title>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    primary: {
-                        50: '#f0f9ff',
-                        100: '#e0f2fe',
-                        200: '#bae6fd',
-                        300: '#7dd3fc',
-                        400: '#38bdf8',
-                        500: '#0ea5e9',
-                        600: '#0284c7',
-                        700: '#0369a1',
-                        800: '#075985',
-                        900: '#0c4a6e', // Lighter blue for header/footer
-                    },
-                    secondary: {
-                        50: '#fff7ed',
-                        100: '#ffedd5',
-                        200: '#fed7aa',
-                        300: '#fdba74',
-                        400: '#fb923c', // Red-orange
-                        500: '#f97316',
-                        600: '#ea580c',
-                        700: '#c2410c',
-                        800: '#9a3412',
-                        900: '#7c2d12',
-                    }
-                }
-            }
-        }
-    }
-</script>
-<!-- Lemon Milk Font -->
-<link href="https://fonts.cdnfonts.com/css/lemon-milk" rel="stylesheet">
-<!-- Lordicon -->
-<script src="https://cdn.lordicon.com/lordicon.js"></script>
-<!-- Custom Styles -->
-<style>
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8f5fa;
-    }
-    h1, h2, h3, h4, h5, h6, .lemon-milk {
-        font-family: 'LEMON MILK', sans-serif;
-        letter-spacing: 0.05em;
-    }
-    .btn-hover {
-        transition: all 0.3s ease;
-    }
-    .btn-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    .btn-hover:active {
-        transform: translateY(0);
-        box-shadow: 0 5px 10px -3px rgba(0, 0, 0, 0.1), 0 2px 3px -2px rgba(0, 0, 0, 0.05);
-    }
-    .link-hover {
-        position: relative;
-    }
-    .link-hover::after {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 2px;
-        bottom: -2px;
-        left: 0;
-        background-color: currentColor;
-        transition: width 0.3s ease;
-    }
-    .link-hover:hover::after {
-        width: 100%;
-    }
-    .link-hover:active {
-        opacity: 0.8;
-    }
-</style>
-</head>
-<body class="min-h-screen text-gray-800 flex flex-col">
-    <!-- Header/Navigation -->
-    <header class="bg-primary-900 text-white shadow-md">
-        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center">
-                <div class="bg-secondary-400 p-2 rounded-lg mr-3">
+{% extends 'base_before_login.html' %}
+
+{% block title %}Home - Smart Library System{% endblock %}
+
+{% block header_links %}
+    <li><a href="{% url 'login' %}">Login</a></li>
+    <li><a href="{% url 'signup' %}">Sign Up</a></li>
+{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+<section class="bg-primary-800 text-white py-16">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-8 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 lemon-milk">SMART LIBRARY SYSTEM</h1>
+                <p class="text-xl mb-6">Find. Borrow. Read. Smarter.</p>
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                    <a href="login-theme2.html" class="px-6 py-3 bg-secondary-400 text-white rounded-md hover:bg-secondary-500 text-center lemon-milk btn-hover transition-colors">LOGIN</a>
+                    <a href="#" class="px-6 py-3 bg-white text-primary-800 rounded-md hover:bg-gray-100 text-center lemon-milk btn-hover transition-colors">REGISTER</a>
+                </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center">
+                <div class="relative">
+                    <div class="absolute -top-6 -left-6 bg-secondary-400 w-16 h-16 rounded-full opacity-20"></div>
+                    <div class="absolute -bottom-6 -right-6 bg-secondary-400 w-24 h-24 rounded-full opacity-20"></div>
+                    <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="Library Books" class="rounded-lg shadow-xl relative z-10 w-full max-w-lg h-auto">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center mb-12">
+            <h2 class="text-3xl font-bold text-primary-800 mb-4 lemon-milk">ABOUT OUR SYSTEM</h2>
+            <p class="text-lg text-gray-700">Our Smart Library System revolutionizes the way you interact with books and library resources. With cutting-edge technology and user-friendly interfaces, we make library management efficient and enjoyable for everyone.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+            <!-- Feature 1 -->
+            <div class="flex flex-col items-center text-center group">
+                <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
                     <lord-icon
-                        src="https://cdn.lordicon.com/wxhtpnnk.json"
+                        src="https://cdn.lordicon.com/msoeawqm.json"
                         trigger="hover"
-                        colors="primary:#ffffff"
-                        style="width:32px;height:32px">
+                        colors="primary:#0369a1"
+                        style="width:48px;height:48px">
                     </lord-icon>
                 </div>
-                <a href="#" class="text-xl font-bold text-white lemon-milk link-hover">SMART LIBRARY</a>
+                <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">SEARCH BOOKS</h3>
+                <p class="text-gray-600">Find books by title, genre, author, or ISBN with our powerful search engine.</p>
             </div>
-            
-            <nav class="hidden md:flex space-x-6">
-                <a href="#" class="text-white font-medium lemon-milk link-hover">HOME</a>
-                <a href="#" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">ABOUT</a>
-            </nav>
-            
-            <div class="flex items-center space-x-3">
-                <a href="login-theme2.html" class="px-4 py-2 border border-white rounded-md text-white hover:bg-white hover:text-primary-900 lemon-milk btn-hover transition-colors">LOGIN</a>
-                <a href="#" class="px-4 py-2 bg-secondary-400 text-white rounded-md hover:bg-secondary-500 lemon-milk btn-hover transition-colors">REGISTER</a>
-            </div>
-            
-            <!-- Mobile menu button -->
-            <button class="md:hidden text-white hover:text-secondary-400 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-        </div>
-    </header>
 
-    <!-- Hero Section -->
-    <section class="bg-primary-800 text-white py-16">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row items-center">
-                <div class="md:w-1/2 mb-8 md:mb-0">
-                    <h1 class="text-4xl md:text-5xl font-bold mb-4 lemon-milk">SMART LIBRARY SYSTEM</h1>
-                    <p class="text-xl mb-6">Find. Borrow. Read. Smarter.</p>
-                    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-                        <a href="login-theme2.html" class="px-6 py-3 bg-secondary-400 text-white rounded-md hover:bg-secondary-500 text-center lemon-milk btn-hover transition-colors">LOGIN</a>
-                        <a href="#" class="px-6 py-3 bg-white text-primary-800 rounded-md hover:bg-gray-100 text-center lemon-milk btn-hover transition-colors">REGISTER</a>
-                    </div>
+            <!-- Feature 2 -->
+            <div class="flex flex-col items-center text-center group">
+                <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
+                    <lord-icon
+                        src="https://cdn.lordicon.com/kbtmbyzy.json"
+                        trigger="hover"
+                        colors="primary:#0369a1"
+                        style="width:48px;height:48px">
+                    </lord-icon>
                 </div>
-                <div class="md:w-1/2 flex justify-center">
-                    <div class="relative">
-                        <div class="absolute -top-6 -left-6 bg-secondary-400 w-16 h-16 rounded-full opacity-20"></div>
-                        <div class="absolute -bottom-6 -right-6 bg-secondary-400 w-24 h-24 rounded-full opacity-20"></div>
-                        <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="Library Books" class="rounded-lg shadow-xl relative z-10 w-full max-w-lg h-auto">
-                    </div>
-                </div>
+                <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">BORROW & RETURN</h3>
+                <p class="text-gray-600">Easily borrow and return books with our streamlined digital process.</p>
             </div>
-        </div>
-    </section>
 
-    <!-- About Section -->
-    <section class="py-16 bg-white">
-        <div class="container mx-auto px-4">
-            <div class="max-w-3xl mx-auto text-center mb-12">
-                <h2 class="text-3xl font-bold text-primary-800 mb-4 lemon-milk">ABOUT OUR SYSTEM</h2>
-                <p class="text-lg text-gray-700">Our Smart Library System revolutionizes the way you interact with books and library resources. With cutting-edge technology and user-friendly interfaces, we make library management efficient and enjoyable for everyone.</p>
+            <!-- Feature 3 -->
+            <div class="flex flex-col items-center text-center group">
+                <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
+                    <lord-icon
+                        src="https://cdn.lordicon.com/qhviklyi.json"
+                        trigger="hover"
+                        colors="primary:#0369a1"
+                        style="width:48px;height:48px">
+                    </lord-icon>
+                </div>
+                <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">PAYMENT SECTION</h3>
+                <p class="text-gray-600">Conveniently manage all payments through our secure payment system.</p>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
-                <!-- Feature 1 -->
-                <div class="flex flex-col items-center text-center group">
-                    <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
-                        <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="hover"
-                            colors="primary:#0369a1"
-                            style="width:48px;height:48px">
-                        </lord-icon>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">SEARCH BOOKS</h3>
-                    <p class="text-gray-600">Find books by title, genre, author, or ISBN with our powerful search engine.</p>
+
+            <!-- Feature 4 -->
+            <div class="flex flex-col items-center text-center group">
+                <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
+                    <lord-icon
+                        src="https://cdn.lordicon.com/tyounuzx.json"
+                        trigger="hover"
+                        colors="primary:#0369a1"
+                        style="width:48px;height:48px">
+                    </lord-icon>
                 </div>
-                
-                <!-- Feature 2 -->
-                <div class="flex flex-col items-center text-center group">
-                    <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
-                        <lord-icon
-                            src="https://cdn.lordicon.com/kbtmbyzy.json"
-                            trigger="hover"
-                            colors="primary:#0369a1"
-                            style="width:48px;height:48px">
-                        </lord-icon>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">BORROW & RETURN</h3>
-                    <p class="text-gray-600">Easily borrow and return books with our streamlined digital process.</p>
-                </div>
-                
-                <!-- Feature 3 -->
-                <div class="flex flex-col items-center text-center group">
-                    <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
-                        <lord-icon
-                            src="https://cdn.lordicon.com/qhviklyi.json"
-                            trigger="hover"
-                            colors="primary:#0369a1"
-                            style="width:48px;height:48px">
-                        </lord-icon>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">PAYMENT SECTION</h3>
-                    <p class="text-gray-600">Conveniently manage all payments through our secure payment system.</p>
-                </div>
-                
-                <!-- Feature 4 -->
-                <div class="flex flex-col items-center text-center group">
-                    <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
-                        <lord-icon
-                            src="https://cdn.lordicon.com/tyounuzx.json"
-                            trigger="hover"
-                            colors="primary:#0369a1"
-                            style="width:48px;height:48px">
-                        </lord-icon>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">REAL-TIME AVAILABILITY</h3>
-                    <p class="text-gray-600">Check book availability in real-time and place holds on checked-out items.</p>
-                </div>
+                <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">REAL-TIME AVAILABILITY</h3>
+                <p class="text-gray-600">Check book availability in real-time and place holds on checked-out items.</p>
             </div>
         </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-primary-900 text-white py-8 mt-auto">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <div class="flex items-center mb-4">
-                        <div class="bg-secondary-400 p-1 rounded-lg mr-2">
-                            <lord-icon
-                                src="https://cdn.lordicon.com/wxhtpnnk.json"
-                                trigger="hover"
-                                colors="primary:#ffffff"
-                                style="width:24px;height:24px">
-                            </lord-icon>
-                        </div>
-                        <span class="text-lg font-bold lemon-milk">SMART LIBRARY</span>
-                    </div>
-                    <p class="text-gray-300 text-sm">Your gateway to knowledge and imagination. Explore our vast collection of books and resources.</p>
-                </div>
-                
-                <div>
-                    <h3 class="text-lg font-bold mb-4 lemon-milk">CONTACT US</h3>
-                    <ul class="space-y-2 text-gray-300">
-                        <li class="flex items-start">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            123 Library Street, Booktown, BT1 2LP
-                        </li>
-                        <li class="flex items-start">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            info@smartlibrary.com
-                        </li>
-                        <li class="flex items-start">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            (123) 456-7890
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="border-t border-primary-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-                <p>&copy; 2025 Smart Library System. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-</body>
-</html></title>
-</head>
-<body>
-
-</body>
-</html>
+    </div>
+</section>
+{% endblock %}
