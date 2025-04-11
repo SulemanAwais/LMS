@@ -6,22 +6,88 @@
 {% block title %}Search - Smart Library System{% endblock %}
 
 {% block content %}
-
     <!-- Page Title -->
     <div class="mb-5 text-center">
         <h1 class="lemon-milk text-primary-700 text-3xl">📚 Book Collection</h1>
         <p class="text-gray-600">Browse and borrow from our extensive library</p>
     </div>
 
-    <!-- Search Box -->
-    <div class="mb-4 max-w-xl mx-auto">
-        <div class="relative">
-            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+    <!-- Search and Filters -->
+    <div class="max-w-6xl mx-auto mb-6">
+        <!-- Search Box -->
+        <div class="mb-4 max-w-xl mx-auto">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" id="global-search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 shadow-sm" placeholder="Search for books by title, author, or ISBN..." />
             </div>
-            <input type="text" id="global-search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 shadow-sm" placeholder="Search for books by title, author, or ISBN..." />
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <div class="flex flex-col md:flex-row md:items-center md:space-x-6 space-y-4 md:space-y-0">
+                <!-- Genre Filter -->
+                <div class="flex-1">
+                    <label for="genre-filter" class="block text-sm font-medium text-gray-700 mb-1">Genre</label>
+                    <select id="genre-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Genres</option>
+                        <option value="fiction">Fiction</option>
+                        <option value="nonfiction">Non-Fiction</option>
+                        <option value="mystery">Mystery</option>
+                        <option value="sci-fi">Science Fiction</option>
+                        <option value="fantasy">Fantasy</option>
+                        <option value="biography">Biography</option>
+                        <option value="history">History</option>
+                        <option value="children">Children</option>
+                        <option value="romance">Romance</option>
+                        <option value="selfhelp">Self-Help</option>
+                    </select>
+                </div>
+
+                <!-- Availability Filter -->
+                <div class="flex-1">
+                    <label for="availability-filter" class="block text-sm font-medium text-gray-700 mb-1">Availability</label>
+                    <select id="availability-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Books</option>
+                        <option value="available">Available</option>
+                        <option value="unavailable">Not Available</option>
+                    </select>
+                </div>
+
+                <!-- Apply Filters Button -->
+                <div class="flex-none self-end">
+                    <button id="apply-filters" class="px-4 py-2 bg-primary-700 text-white rounded-md hover:bg-primary-800 transition-colors">
+                        Apply Filters
+                    </button>
+                </div>
+
+                <!-- Reset Filters Button -->
+                <div class="flex-none self-end">
+                    <button id="reset-filters" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Filters Display -->
+    <div id="active-filters" class="max-w-6xl mx-auto mb-4 hidden">
+        <div class="bg-primary-50 rounded-lg p-3 flex items-center">
+            <span class="text-primary-700 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                </svg>
+            </span>
+            <span class="text-sm font-medium text-primary-800">Active Filters:</span>
+            <div id="filter-tags" class="flex flex-wrap gap-2 ml-2">
+                <!-- Filter tags will be added here dynamically -->
+            </div>
         </div>
     </div>
 
@@ -31,13 +97,13 @@
             <table id="book-table" class="table table-striped" width="100%">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Title</th>
                         <th>Author</th>
                         <th>ISBN</th>
-                        <th>Edition</th>
+                        <th>Genre</th>
                         <th>Publisher</th>
                         <th>Available Copies</th>
-                        <th>Genre</th>
                         <th>Actions</th>
                         <th>Borrow</th>
                     </tr>
@@ -51,6 +117,144 @@
     <!-- Hidden element to store the staff status -->
     <div id="user-status" data-is-staff="{{ request.user.is_staff }}" class="hidden"></div>
 
+    <!-- Borrow Modal -->
+    <div id="borrow-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+            <!-- Close button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none" id="close-modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="bg-primary-50 p-6 border-b border-primary-100 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-primary-800 lemon-milk">Borrow Book</h2>
+                <p class="text-gray-600">Review and confirm your borrowing request</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- Book Details Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Book Details</h3>
+
+                    <div class="space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Title:</span>
+                            <span class="font-semibold text-gray-800" id="book-title"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Author:</span>
+                            <span class="text-gray-800" id="book-author"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">ISBN:</span>
+                            <span class="text-gray-800" id="book-isbn"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Available:</span>
+                            <span class="text-gray-800" id="book-available">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Yes
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Member Information -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Member Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="member_id" class="block text-sm font-medium text-gray-700 mb-1">Member ID</label>
+                            <input type="text" id="member_id" value="{{ request.user.id }}" class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700 cursor-not-allowed" readonly>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="email" value="{{ request.user.email }}" class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700 cursor-not-allowed" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Borrowing Options -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Borrowing Options</h3>
+
+                    <div>
+                        <label for="borrow_period" class="block text-sm font-medium text-gray-700 mb-1">Borrowing Period</label>
+                        <select id="borrow_period" name="borrow_period" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="7">7 days</option>
+                            <option value="3">3 days</option>
+                            <option value="15">15 days</option>
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">Select how long you would like to borrow this book.</p>
+                    </div>
+                </div>
+
+                <!-- Agreement -->
+                <div class="mb-8">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="agreement" name="agreement" type="checkbox" required class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="agreement" class="font-medium text-gray-700">I agree to the library's borrowing policies</label>
+                            <p class="text-gray-500">By checking this box, you agree to return the book in good condition by the due date or face applicable fines.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button type="button" id="cancel-borrow" class="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-center lemon-milk btn-hover transition-colors">
+                        CANCEL
+                    </button>
+                        <p>Book ID: {{ book.title }}</p> <!-- Debugging line to check book.id -->
+
+                    <button type="button" id="confirm-borrow" class="w-full sm:w-auto px-6 py-3 bg-primary-700 text-white rounded-md hover:bg-primary-800 lemon-milk btn-hover transition-colors" >
+                        CONFIRM BORROW
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Hidden form field to store book ID -->
+                <input type="hidden" id="book_id" name="book_id" value="">
+
+                <!-- Book Details Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Book Details</h3>
+                    <!-- Rest of the book details section -->
+                </div>
+
+                <!-- Rest of the modal content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="success-notification" class="fixed bottom-5 right-5 bg-white rounded-lg shadow-lg p-4 flex items-center transform transition-all duration-300 translate-y-20 opacity-0 invisible max-w-md">
+        <div class="bg-green-100 rounded-full p-2 mr-4">
+            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <h4 class="text-gray-800 font-medium">Success!</h4>
+            <p class="text-gray-600 text-sm">Book has been borrowed successfully.</p>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                <div class="bg-green-500 h-1.5 rounded-full" id="timer-bar" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Lordicon script -->
     <script src="https://cdn.lordicon.com/lordicon.js"></script>
 
@@ -58,14 +262,13 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-
-    <!-- IMPORTANT: Only include DataTables CSS, not Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-    <!-- DataTable Initialization -->
     <script type="text/javascript">
         $(document).ready(function() {
-            console.log("Initializing DataTable...");
             var isStaff = $("#user-status").data("is-staff");
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            var selectedGenre = "";
+            var selectedAvailability = "";
             var table = $('#book-table').DataTable({
                 "serverSide": true,
                 "ajax": {
@@ -73,19 +276,21 @@
                     "type": "GET",
                     "data": function(d) {
                         d.searchTerm = $('#global-search').val();
+                        d.genre = selectedGenre;
+                        d.availability = selectedAvailability;
                     },
                     "error": function(xhr, status, error) {
                         console.error("AJAX request failed. Status:", status, "Error:", error);
                     }
                 },
                 "columns": [
+                    { "data": "id", "className": "text-center max-width-id" },
                     { "data": "title", "className": "text-center" },
                     { "data": "author", "className": "text-center" },
                     { "data": "isbn", "className": "text-center" },
-                    { "data": "edition", "className": "text-center" },
+                    { "data": "genre", "className": "text-center" },
                     { "data": "publisher", "className": "text-center" },
                     { "data": "available_copies", "className": "text-center" },
-                    { "data": "genre", "className": "text-center" },
                     {
                         "data": null,
                         "defaultContent": "-",
@@ -135,8 +340,9 @@
                         "orderable": false,
                         "className": "text-center",
                         "render": function (data, type, row) {
+                            console.log("Rendering borrow button for book ID:", row.id);
                             if (row.available_copies > 0) {
-                                return `<button class="borrow-btn" onclick="borrowBook(${row.code})">Borrow</button>`;
+                                return `<button class="borrow-btn" onclick="openBorrowModal('${row.title}', '${row.author}', '${row.isbn}', ${row.id})">Borrow</button>`;
                             } else {
                                 return `<button class="borrow-btn borrow-btn-taken" disabled>Taken</button>`;
                             }
@@ -145,12 +351,12 @@
                 ],
                 columnDefs: [
                     {
-                      targets: [0,1,2,3,4], // Index of the column to apply the class
+                      targets: [1,2,3,4,5,6], 
                       createdCell: function(td, cellData, rowData, row, col) {
                         $(td).addClass('ellipsis-cell');
                       }
                     }
-                  ],
+                ],
                 "autoWidth": false,
                 "searching": false,
                 "language": {
@@ -172,17 +378,247 @@
                 "pageLength": 10,
                 "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]]
             });
+
+            // Custom search input event
             $('#global-search').on('keyup', function() {
                 console.log("Searching for:", this.value);
-                table.ajax.reload();  // Reload the table with the search term
+                table.ajax.reload();
             });
+
+            // Apply filters button click event
+            $('#apply-filters').on('click', function() {
+                console.log("Apply Filters button clicked");
+                selectedGenre = $('#genre-filter').val();
+                selectedAvailability = $('#availability-filter').val();
+
+                console.log("Selected Genre:", selectedGenre);
+                console.log("Selected Availability:", selectedAvailability);
+
+                // Update active filters display
+                updateActiveFilters();
+
+                // Reload the table with the new filters
+                table.ajax.reload();
+            });
+
+            // Reset filters button click event
+            $('#reset-filters').on('click', function() {
+                console.log("Reset Filters button clicked");
+
+                // Reset filter values
+                $('#genre-filter').val('');
+                $('#availability-filter').val('');
+
+                // Reset filter variables
+                selectedGenre = "";
+                selectedAvailability = "";
+
+                // Hide active filters display
+                $('#active-filters').addClass('hidden');
+                $('#filter-tags').empty();
+
+                // Reload the table
+                table.ajax.reload();
+            });
+
+            // Function to update active filters display
+            function updateActiveFilters() {
+                const filterTags = $('#filter-tags');
+                filterTags.empty();
+
+                let hasFilters = false;
+
+                // Add genre filter tag if selected
+                if (selectedGenre) {
+                    console.log("kwbjhwsbfwqbfklqwnfob")
+                    hasFilters = true;
+                    const genreText = $('#genre-filter option:selected').text();
+                    console.log("genre text")
+                    console.log(genreText)
+                    filterTags.append(`
+                        <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                            Genre: ${genreText}
+                            <button type="button" class="ml-1 text-primary-500 hover:text-primary-700 focus:outline-none" data-filter="genre">
+                                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `);
+                }
+
+                // Add availability filter tag if selected
+                if (selectedAvailability) {
+                    hasFilters = true;
+                    const availabilityText = $('#availability-filter option:selected').text();
+                    filterTags.append(`
+                        <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                            Availability: ${availabilityText}
+                            <button type="button" class="ml-1 text-primary-500 hover:text-primary-700 focus:outline-none" data-filter="availability">
+                                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `);
+                }
+
+                // Show or hide active filters section
+                if (hasFilters) {
+                    $('#active-filters').removeClass('hidden');
+                } else {
+                    $('#active-filters').addClass('hidden');
+                }
+
+                // Add click event for filter tag remove buttons
+                $('#filter-tags button').on('click', function() {
+                    const filterType = $(this).data('filter');
+                    console.log("Removing filter:", filterType);
+
+                    if (filterType === 'genre') {
+                        $('#genre-filter').val('');
+                        selectedGenre = "";
+                    } else if (filterType === 'availability') {
+                        $('#availability-filter').val('');
+                        selectedAvailability = "";
+                    }
+
+                    // Update active filters display
+                    updateActiveFilters();
+
+                    // Reload the table
+                    table.ajax.reload();
+                });
+            }
+
+            // Fix header width after table initialization
             $(window).resize(function() {
                 table.columns.adjust().draw();
             });
+
             console.log("DataTable initialized.");
-        });
-        function borrowBook(bookCode) {
-            alert("Book borrowing request submitted successfully!");
+
+            // Modal functionality
+            const modal = document.getElementById('borrow-modal');
+            const modalContent = document.getElementById('modal-content');
+            const closeModal = document.getElementById('close-modal');
+            const cancelBorrow = document.getElementById('cancel-borrow');
+            const confirmBorrow = document.getElementById('confirm-borrow');
+            const successNotification = document.getElementById('success-notification');
+            const timerBar = document.getElementById('timer-bar');
+
+            // Current book ID being borrowed
+            let currentBookId = null;
+
+            // Close modal function
+            function closeModalFunc() {
+                modal.classList.add('hidden');
+                modalContent.classList.remove('modal-enter');
+                // Reset form
+                document.getElementById('agreement').checked = false;
+                document.getElementById('borrow_period').value = '7';
+            }
+
+            // Close modal when clicking close button or cancel
+            closeModal.addEventListener('click', closeModalFunc);
+            cancelBorrow.addEventListener('click', closeModalFunc);
+
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModalFunc();
+                }
+            });
+
+            // Confirm borrow
+            // Modify the confirm borrow event handler
+    confirmBorrow.addEventListener('click', function() {
+        if (!document.getElementById('agreement').checked) {
+            alert('Please agree to the library\'s borrowing policies.');
+            return;
         }
+
+        const borrowPeriod = document.getElementById('borrow_period').value;
+        const bookId = document.getElementById('book_id').value;
+
+        console.log("Confirming borrow for book ID:", bookId);
+
+        if (!bookId) {
+            console.error("Book ID is missing!");
+            alert("Error: Book ID is missing. Please try again.");
+            return;
+        }
+
+        // Make an AJAX call to your backend
+        $.ajax({
+            url: `/borrow/${bookId}/`,
+            type: "POST",
+            data: {
+                borrow_period: borrowPeriod,
+                csrfmiddlewaretoken: csrfToken
+            },
+            success: function(response) {
+                console.log("Borrow success:", response);
+                closeModalFunc();
+                showSuccessNotification();
+                // Refresh the table to update available copies
+                table.ajax.reload();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error borrowing book:", error, "Status:", status, "Response:", xhr.responseText);
+                alert("An error occurred while borrowing the book.");
+            }
+        });
+    });
+            // Show success notification with timer
+            function showSuccessNotification() {
+                successNotification.classList.remove('invisible', 'opacity-0', 'translate-y-20');
+
+                // Start the timer animation
+                let timeLeft = 5; // 5 seconds
+                const timerInterval = setInterval(function() {
+                    timeLeft -= 0.1;
+                    const percentage = (timeLeft / 5) * 100;
+                    timerBar.style.width = percentage + '%';
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        successNotification.classList.add('invisible', 'opacity-0', 'translate-y-20');
+                    }
+                }, 100);
+            }
+
+            // Make success notification dismissible by clicking anywhere
+            document.addEventListener('click', function() {
+                if (!successNotification.classList.contains('invisible')) {
+                    successNotification.classList.add('invisible', 'opacity-0', 'translate-y-20');
+                }
+            });
+
+            // Expose the openBorrowModal function globally
+            window.openBorrowModal = function(title, author, isbn, bookId) {
+                console.log("Opening borrow modal for book:", title, "ID:", bookId);
+
+                // Set current book ID in both the variable and the hidden field
+                currentBookId = bookId;
+                document.getElementById('book_id').value = bookId;
+
+                // Debug output to verify the ID is set
+                console.log("Book ID set to:", bookId, "Hidden field value:", document.getElementById('book_id').value);
+
+                // Populate modal with book details
+                document.getElementById('book-title').textContent = title;
+                document.getElementById('book-author').textContent = author;
+                document.getElementById('book-isbn').textContent = isbn;
+
+                // Show modal
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modalContent.classList.add('modal-enter');
+                }, 10);
+            };
+        });
+
     </script>
+
 {% endblock %}
