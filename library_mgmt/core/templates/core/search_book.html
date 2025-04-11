@@ -1,0 +1,186 @@
+{% extends 'base_after_login.html' %}
+{% load static %}
+
+{% block title %}Search - Smart Library System{% endblock %}
+
+{% block content %}
+    <!-- Page Title -->
+    <h1>📚 Book List</h1>
+
+    <!-- Search Box -->
+    <div class="mb-4">
+        <input type="text" id="global-search" class="form-control" placeholder="Search for books..." />
+    </div>
+
+    <!-- Book Table -->
+    <div id="main-content">
+        <table id="book-table" class="table table-striped table-bordered" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>ISBN</th>
+                    <th>Edition</th>
+                    <th>Publisher</th>
+                    <th>Available Copies</th>
+                    <th>Genre</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Hidden element to store the staff status -->
+    <div id="user-status" data-is-staff="{{ request.user.is_staff }}"></div>
+
+    <!-- Include Lordicon script -->
+    <script src="https://cdn.lordicon.com/ritcuqlt.js"></script>
+
+    <!-- CSS: Bootstrap + DataTables -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+
+    <!-- JS: jQuery + Bootstrap + DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Custom Styling -->
+    <style>
+        h1 {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #book-table_wrapper {
+            margin-top: 20px;
+        }
+
+        #book-table thead {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        #book-table tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        #book-table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        #global-search {
+            border-radius: 5px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            margin-left: 10px;
+            width: 100%;
+        }
+    </style>
+
+    <!-- DataTable Initialization -->
+    <script type="text/javascript">
+        $(document).ready(function() {
+            console.log("Initializing DataTable...");
+
+            // Retrieve staff status from the hidden element
+            var isStaff = $("#user-status").data("is-staff");
+
+            var table = $('#book-table').DataTable({
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'book-list' %}",
+                    "type": "GET",
+                    "data": function(d) {
+                        // Add search term from the custom search input to the request
+                        d.searchTerm = $('#global-search').val();
+                    },
+                    "error": function(xhr, status, error) {
+                        console.error("AJAX request failed. Status:", status, "Error:", error);
+                    }
+                },
+                "columns": [
+                    { "data": "title" },
+                    { "data": "author" },
+                    { "data": "isbn" },
+                    { "data": "edition" },
+                    { "data": "publisher" },
+                    { "data": "available_copies" },
+                    { "data": "genre" },
+                    {
+                        "data": null,
+                        "defaultContent": "",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            // Action URLs
+                            let viewURL = "#";
+                            let editURL = "#";
+                            let deleteURL = "#";
+
+                            // Create the action buttons HTML
+                            let actions = `<ul class="list-inline hstack gap-2 mb-0">`;
+
+                            // View Action (Always visible)
+                            actions += `
+                            <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="History">
+                                <a href="${viewURL.replace('0', row.code)}" class="text-primary d-inline-block">
+                                    <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="hover" style="width:24px;height:24px"></lord-icon>
+                                </a>
+                            </li>`;
+
+                            // Edit and Delete actions for staff users only
+                            if (isStaff) {
+                                actions += `<li class="list-inline-item edit" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Edit">
+                                            <a href="${editURL.replace('0', row.code)}" class="text-primary d-inline-block edit-item-btn">
+                                                <lord-icon src="https://cdn.lordicon.com/tdixklip.json" trigger="hover" style="width:24px;height:24px"></lord-icon>
+                                            </a>
+                                        </li>`;
+
+                                actions += `<li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Remove">
+                                            <a class="delete-btn text-danger d-inline-block remove-item-btn" data-bs-toggle="modal" href="#deleteOrder" data-url="${deleteURL.replace('0', row.code)}">
+                                                <lord-icon src="https://cdn.lordicon.com/vfntgfwv.json" trigger="hover" style="width:24px;height:24px"></lord-icon>
+                                            </a>
+                                        </li>`;
+                            }
+
+                            // Add checkbox action (this is regardless of staff status)
+                            actions += `<div class="form-check">
+                                            <input class="form-check-input checkbox" type="checkbox" value="${row.code}" id="checkboxID">
+                                            <label class="form-check-label" for="checkboxID"></label>
+                                        </div>`;
+
+                            // Close the actions list
+                            actions += `</ul>`;
+
+                            // Return the action buttons HTML
+                            return actions;
+                        }
+                    }
+                ],
+                "searching": false,  // Disable the default DataTable search
+                "language": {
+                    "search": "Search Books:"
+                }
+            });
+
+            // Custom search input event
+            $('#global-search').on('keyup', function() {
+                console.log("Searching for:", this.value);
+
+                // Trigger the DataTable search function and redraw the table
+                table.ajax.reload();  // Reload the table with the search term
+            });
+
+            console.log("DataTable initialized.");
+        });
+    </script>
+{% endblock %}

@@ -7,6 +7,7 @@
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+
     tailwind.config = {
         theme: {
             extend: {
@@ -103,8 +104,8 @@
             </div>
 
             <nav class="hidden md:flex space-x-6">
-                <a href="{% url 'home' %}" class="text-white font-medium lemon-milk link-hover">HOME</a>
-                <a href="#" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">SEARCH</a>
+                <a href="{% url 'member_dashboard' %}" class="text-white font-medium lemon-milk link-hover">HOME</a>
+                <a href="{% url 'search_book' %}" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">SEARCH</a>
                 <a href="#" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">BORROWED BOOKS</a>
                 <a href="#" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">RETURNS</a>
                 <a href="#" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">FINES</a>

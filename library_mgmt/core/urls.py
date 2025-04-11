@@ -1,9 +1,19 @@
-from django.urls import path
-from .views import home, login_view, signup_view, member_dashboard_view
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
+from .views import home, login_view, signup_view, member_dashboard_view, search_book_view, BookListView
+from .viewsets import BookDatatableViewSet
+
+router = DefaultRouter()
+router.register(r'book', BookDatatableViewSet, basename='book')
+
 urlpatterns = [
     path('', home, name='home'),
+    path('api/', include(router.urls)),
     path('login/', login_view, name='login'),
     path('signup/', signup_view, name='signup'),
     path('dashboard/', member_dashboard_view, name='member_dashboard'),
+    path('search/', search_book_view, name='search_book'),
+    path('books/', BookListView.as_view(), name='book-list'),  # Ensure this path matches your DataTable AJAX request
 
 ]
