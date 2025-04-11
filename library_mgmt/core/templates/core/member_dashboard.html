@@ -1,9 +1,263 @@
 {% extends 'base_after_login.html' %}
+{% load static %}
 
 {% block title %}Dashboard - Smart Library System{% endblock %}
 
 {% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Welcome Section -->
+    <div class="bg-primary-800 text-white rounded-xl shadow-lg p-6 mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary-700 rounded-full -mt-20 -mr-20 opacity-50"></div>
+        <div class="absolute bottom-0 left-0 w-40 h-40 bg-secondary-400 rounded-full -mb-16 -ml-16 opacity-20"></div>
 
+        <div class="relative z-10">
+            <h1 class="text-3xl font-bold mb-2 lemon-milk">Welcome, {{ request.user.first_name }}!</h1>
+            <p class="text-primary-100 mb-4">Manage your library activities from your personal dashboard.</p>
 
+            <div class="flex flex-wrap gap-4 mt-6">
+                <div class="bg-white bg-opacity-20 rounded-lg px-4 py-3 flex items-center">
+                    <lord-icon
+                        src="https://cdn.lordicon.com/kbtmbyzy.json"
+                        trigger="hover"
+                        colors="primary:#ffffff"
+                        style="width:36px;height:36px">
+                    </lord-icon>
+                    <div class="ml-3">
+                        <p class="text-sm text-primary-100">Books Borrowed</p>
+                        <p class="text-xl font-bold">{{ borrowed_count|default:"0" }}</p>
+                    </div>
+                </div>
 
+                <div class="bg-white bg-opacity-20 rounded-lg px-4 py-3 flex items-center">
+                    <lord-icon
+                        src="https://cdn.lordicon.com/qhviklyi.json"
+                        trigger="hover"
+                        colors="primary:#ffffff"
+                        style="width:36px;height:36px">
+                    </lord-icon>
+                    <div class="ml-3">
+                        <p class="text-sm text-primary-100">Pending Fines</p>
+                        <p class="text-xl font-bold">${{ pending_fines|default:"0.00" }}</p>
+                    </div>
+                </div>
+
+                <div class="bg-white bg-opacity-20 rounded-lg px-4 py-3 flex items-center">
+                    <lord-icon
+                        src="https://cdn.lordicon.com/kbtmbyzy.json"
+                        trigger="hover"
+                        colors="primary:#ffffff"
+                        style="width:36px;height:36px">
+                    </lord-icon>
+                    <div class="ml-3">
+                        <p class="text-sm text-primary-100">Books Due Soon</p>
+                        <p class="text-xl font-bold">{{ due_soon_count|default:"0" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <h2 class="text-2xl font-bold mb-6 text-primary-800 lemon-milk">Quick Actions</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <!-- Borrow/Reserve Books -->
+        <a href="{% url 'book-list' %}" class="group bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col items-center text-center">
+            <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
+                <lord-icon
+                    src="https://cdn.lordicon.com/msoeawqm.json"
+                    trigger="hover"
+                    colors="primary:#0c4a6e"
+                    style="width:48px;height:48px">
+                </lord-icon>
+            </div>
+            <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">BORROW/RESERVE</h3>
+            <p class="text-gray-600">Search and borrow books from our extensive collection</p>
+        </a>
+
+        <!-- View Borrowed Books -->
+        <a href="#" class="group bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col items-center text-center">
+            <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
+                <lord-icon
+                    src="https://cdn.lordicon.com/kbtmbyzy.json"
+                    trigger="hover"
+                    colors="primary:#0c4a6e"
+                    style="width:48px;height:48px">
+                </lord-icon>
+            </div>
+            <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">MY BOOKS</h3>
+            <p class="text-gray-600">View all your currently borrowed books</p>
+        </a>
+
+        <!-- Return/Renew Books -->
+        <a href="#" class="group bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col items-center text-center">
+            <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
+                <lord-icon
+                    src="https://cdn.lordicon.com/uukerzzv.json"
+                    trigger="hover"
+                    colors="primary:#0c4a6e"
+                    style="width:48px;height:48px">
+                </lord-icon>
+            </div>
+            <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">RETURN/RENEW</h3>
+            <p class="text-gray-600">Return or renew your borrowed books</p>
+        </a>
+
+        <!-- Pay Fines -->
+        <a href="#" class="group bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col items-center text-center">
+            <div class="bg-primary-100 p-4 rounded-full mb-4 group-hover:bg-primary-200 transition-colors">
+                <lord-icon
+                    src="https://cdn.lordicon.com/qhviklyi.json"
+                    trigger="hover"
+                    colors="primary:#0c4a6e"
+                    style="width:48px;height:48px">
+                </lord-icon>
+            </div>
+            <h3 class="text-lg font-bold mb-2 lemon-milk group-hover:text-primary-800 transition-colors">PAY FINES</h3>
+            <p class="text-gray-600">View and pay any outstanding fines</p>
+        </a>
+    </div>
+
+    <!-- Books Due Soon -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Due Soon Books -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-primary-800 lemon-milk">Books Due Soon</h2>
+                <a href="#" class="text-primary-600 hover:text-primary-800 text-sm font-medium">View All</a>
+            </div>
+
+            {% if due_soon_books %}
+                <div class="space-y-4">
+                    {% for book in due_soon_books %}
+                        <div class="flex items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex-shrink-0 w-12 h-16 bg-gray-200 rounded overflow-hidden mr-4">
+                                {% if book.cover_image %}
+                                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center bg-primary-100 text-primary-800">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-medium text-gray-900 truncate">{{ book.title }}</h4>
+                                <p class="text-xs text-gray-500">{{ book.author }}</p>
+                                <div class="flex items-center mt-1">
+                                    <span class="text-xs font-medium {% if book.days_left <= 3 %}text-red-600{% else %}text-amber-600{% endif %}">
+                                        Due in {{ book.days_left }} days
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <button onclick="location.href='{% url 'renew-book' book.id %}'" class="px-3 py-1 text-xs font-medium text-primary-700 bg-primary-100 rounded-md hover:bg-primary-200">
+                                    Renew
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <lord-icon
+                        src="https://cdn.lordicon.com/lupuorrc.json"
+                        trigger="loop"
+                        colors="primary:#0c4a6e,secondary:#9ca3af"
+                        style="width:64px;height:64px">
+                    </lord-icon>
+                    <p class="mt-4 text-gray-500">No books due soon</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity & Fines -->
+        <div class="space-y-8">
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-bold text-primary-800 mb-6 lemon-milk">Recent Activity</h2>
+
+                {% if recent_activities %}
+                    <div class="space-y-4">
+                        {% for activity in recent_activities %}
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center mr-3">
+                                    {% if activity.type == 'borrow' %}
+                                        <lord-icon
+                                            src="https://cdn.lordicon.com/kbtmbyzy.json"
+                                            trigger="hover"
+                                            colors="primary:#0c4a6e"
+                                            style="width:18px;height:18px">
+                                        </lord-icon>
+                                    {% elif activity.type == 'return' %}
+                                        <lord-icon
+                                            src="https://cdn.lordicon.com/uukerzzv.json"
+                                            trigger="hover"
+                                            colors="primary:#0c4a6e"
+                                            style="width:18px;height:18px">
+                                        </lord-icon>
+                                    {% elif activity.type == 'renew' %}
+                                        <lord-icon
+                                            src="https://cdn.lordicon.com/ippkhukl.json"
+                                            trigger="hover"
+                                            colors="primary:#0c4a6e"
+                                            style="width:18px;height:18px">
+                                        </lord-icon>
+                                    {% elif activity.type == 'payment' %}
+                                        <lord-icon
+                                            src="https://cdn.lordicon.com/qhviklyi.json"
+                                            trigger="hover"
+                                            colors="primary:#0c4a6e"
+                                            style="width:18px;height:18px">
+                                        </lord-icon>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm text-gray-900">{{ activity.description }}</p>
+                                    <p class="text-xs text-gray-500">{{ activity.date|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-gray-500">No recent activity</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Fines Summary -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-bold text-primary-800 mb-6 lemon-milk">Fines Summary</h2>
+
+                {% if pending_fines > 0 %}
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">Total Pending</span>
+                            <span class="text-lg font-bold text-primary-800">${{ pending_fines }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-secondary-400 h-2.5 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'pay-fines' %}" class="block w-full py-2 px-4 bg-primary-700 hover:bg-primary-800 text-white text-center rounded-md transition-colors">
+                        Pay Now
+                    </a>
+                {% else %}
+                    <div class="text-center py-4">
+                        <lord-icon
+                            src="https://cdn.lordicon.com/lupuorrc.json"
+                            trigger="loop"
+                            colors="primary:#0c4a6e,secondary:#9ca3af"
+                            style="width:64px;height:64px">
+                        </lord-icon>
+                        <p class="mt-4 text-gray-500">No pending fines</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

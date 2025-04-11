@@ -1,0 +1,310 @@
+/* Override DataTables Bootstrap styling to prevent conflicts */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_processing,
+        .dataTables_wrapper .dataTables_paginate {
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        /* Remove underlines from links in the header */
+        .dataTables_wrapper a {
+            text-decoration: none !important;
+        }
+
+        /* Table styling */
+        #book-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            table-layout: fixed;
+        }
+
+        /* Fix for header overflow */
+        #main-content {
+            overflow-x: auto;
+        }
+
+        #book-table thead th {
+            background-color: #0c4a6e; /* Updated to new theme color */
+            color: white;
+            font-weight: 500;
+            padding: 12px 15px;
+            border: none;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-align: center; /* Center header text */
+            vertical-align: middle;
+            height: auto; /* Allow height to adjust to content */
+            white-space: nowrap; /* Prevent text wrapping in header */
+        }
+
+        #book-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        #book-table tbody tr:hover {
+            background-color: rgba(12, 74, 110, 0.05);
+        }
+
+        #book-table tbody td {
+            padding: 12px 15px;
+            border-top: 1px solid #f0f0f0;
+            vertical-align: middle;
+            word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center; /* Center cell content */
+        }
+
+        /* Column widths */
+        #book-table th:nth-child(1), #book-table td:nth-child(1) { width: 18%; } /* Title */
+        #book-table th:nth-child(2), #book-table td:nth-child(2) { width: 12%; } /* Author */
+        #book-table th:nth-child(3), #book-table td:nth-child(3) { width: 10%; } /* ISBN */
+        #book-table th:nth-child(4), #book-table td:nth-child(4) { width: 8%; } /* Edition */
+        #book-table th:nth-child(5), #book-table td:nth-child(5) { width: 12%; } /* Publisher */
+        #book-table th:nth-child(6), #book-table td:nth-child(6) { width: 8%; } /* Available Copies */
+        #book-table th:nth-child(7), #book-table td:nth-child(7) { width: 10%; } /* Genre */
+        #book-table th:nth-child(8), #book-table td:nth-child(8) { width: 10%; } /* Actions */
+        #book-table th:nth-child(9), #book-table td:nth-child(9) { width: 12%; } /* Borrow */
+
+        /* Action column alignment */
+        #book-table td:nth-child(8) {
+            text-align: center;
+        }
+
+        #book-table td:nth-child(8) .flex {
+            justify-content: center;
+        }
+
+        /* Custom pagination styling */
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 15px;
+            float: right;
+        }
+
+        .dataTables_wrapper .dataTables_info {
+            margin-top: 15px;
+            float: left;
+            padding-top: 0;
+        }
+
+        .dataTables_wrapper .dataTables_length {
+            float: left;
+            margin-bottom: 15px;
+        }
+
+        /* Clear floats to prevent layout issues */
+        .dataTables_wrapper::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* Custom pagination container */
+        .dataTables_wrapper .dataTables_paginate {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Pagination buttons */
+        .dataTables_wrapper .paginate_button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            margin: 0 2px;
+            padding: 0 10px;
+            border-radius: 6px !important;
+            border: none !important;
+            background: transparent !important;
+            color: #0c4a6e !important;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dataTables_wrapper .paginate_button:hover {
+            background-color: rgba(12, 74, 110, 0.1) !important;
+            color: #0c4a6e !important;
+        }
+
+        .dataTables_wrapper .paginate_button.current {
+            background-color: #0c4a6e !important;
+            color: white !important;
+        }
+
+        .dataTables_wrapper .paginate_button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Length selector styling */
+        .dataTables_wrapper .dataTables_length select {
+            padding: 5px 30px 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230c4a6e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        /* Info text styling */
+        .dataTables_wrapper .dataTables_info {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* Borrow button styling */
+        .borrow-btn {
+            display: inline-block;
+            width: 100%;
+            max-width: 100px;
+            padding: 6px 16px;
+            background-color: #0c4a6e; /* Updated to new theme color */
+            color: white;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap;
+            margin: 0 auto; /* Center the button */
+        }
+
+        .borrow-btn:hover {
+            background-color: #075985;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .borrow-btn:active {
+            transform: translateY(0);
+        }
+
+        .borrow-btn-taken {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            width: 100%;
+            max-width: 100px;
+            white-space: nowrap;
+        }
+
+        .borrow-btn-taken:hover {
+            background-color: #9ca3af;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* View button styling */
+        .view-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            background-color: rgba(12, 74, 110, 0.1);
+            color: #0c4a6e;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .view-btn:hover {
+            background-color: rgba(12, 74, 110, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Staff action buttons */
+        .staff-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .edit-btn {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .edit-btn:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .delete-btn {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .delete-btn:hover {
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            #book-table {
+                display: block;
+                width: 100%;
+            }
+
+            #book-table th, #book-table td {
+                min-width: 120px;
+            }
+
+            #book-table th:nth-child(9), #book-table td:nth-child(9) {
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_paginate {
+                float: none;
+                text-align: center;
+                display: block;
+                margin: 10px auto;
+            }
+
+            .dataTables_wrapper .dataTables_paginate {
+                display: inline-flex;
+                justify-content: center;
+                width: 100%;
+            }
+
+            /* Adjust font size for mobile */
+            #book-table thead th {
+                font-size: 0.75rem;
+                padding: 10px 8px;
+            }
+
+            #book-table tbody td {
+                font-size: 0.85rem;
+                padding: 10px 8px;
+            }
+        }
+        .ellipsis-cell {
+          white-space: nowrap;         /* Prevent text from wrapping */
+          overflow: hidden;            /* Hide the overflow */
+          text-overflow: ellipsis;     /* Show ... at the end */
+          max-width: 150px;            /* Optional: limit the width */
+        }

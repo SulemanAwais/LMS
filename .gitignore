@@ -163,3 +163,5 @@ cython_debug/
 /.idea
 library_mgmt/core/__pycache__/urls.cpython-311.pyc
 .idea/LMS.iml
+/library_mgmt/staticfiles
+/library_mgmt/core/__pycache__
