@@ -1,7 +1,10 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from rest_framework.generics import get_object_or_404
@@ -110,32 +113,62 @@ class BookListView(BaseDatatableView):
 
 @login_required
 def borrow_book(request, book_id):
-    # Fetch the book or return 404 if not found
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        borrow_period = int(data.get("borrowing_period", 14))  # Default to 14 days if not provided
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return JsonResponse({"error": "Invalid or missing borrowing period"}, status=400)
+
     book = get_object_or_404(Book, pk=book_id)
     user = get_user(request)
-    print("user:", user)
-    # Check if there are available copies of the book
-    if book.available_copies > 0:
-        # Reduce available copies by 1
-        book.available_copies -= 1
-        book.save()
 
-        # Calculate due date (e.g., 14 days from the borrow date)
-        due_date = timezone.now().date() + timedelta(days=14)
+    if book.available_copies <= 0:
+        return JsonResponse({"error": f'Sorry, "{book.title}" is currently not available.'}, status=400)
 
-        # Create a BorrowRecord to track the borrowing
-        BorrowRecord.objects.create(
-            user=user,
-            book=book,
-            due_date=due_date
-        )
+    # Decrease available copies
+    book.available_copies -= 1
+    book.save()
 
-        # Success message
-        messages.success(request, f'You have successfully borrowed "{book.title}".')
+    # Calculate due date
+    due_date = timezone.now().date() + timedelta(days=borrow_period)
 
-    else:
-        # No available copies, show an error message
-        messages.error(request, f'Sorry, "{book.title}" is currently not available.')
+    # Create borrow record
+    BorrowRecord.objects.create(
+        user=user,
+        book=book,
+        due_date=due_date
+    )
 
-    # Redirect to the book list or a specific borrow confirmation page
-    return redirect('book-list')
+    return JsonResponse({
+        "message": f'You have successfully borrowed "{book.title}" for {borrow_period} days.',
+        "due_date": due_date.strftime("%Y-%m-%d")
+    })
+
+@login_required
+def total_borrowed_books(request):
+    count = BorrowRecord.objects.filter(return_date__isnull=True).count()
+    return JsonResponse({"total_borrowed_books": count})
+
+
+@login_required
+def books_due_soon(request):
+    today = timezone.now().date()
+    upcoming_due_date = today + timedelta(days=4)
+    due_soon_books = BorrowRecord.objects.filter(
+        due_date__lte=upcoming_due_date,
+        return_date__isnull=True
+    ).select_related("book")
+
+    books_list = [
+        {
+            "title": record.book.title,
+            "due_date": record.due_date.strftime("%Y-%m-%d"),
+            "borrower": record.user.username
+        }
+        for record in due_soon_books
+    ]
+
+    return JsonResponse({"books_due_soon": books_list})
