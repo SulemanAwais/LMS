@@ -1,0 +1,229 @@
+{% extends 'base_after_login.html' %}
+{% load static %}
+{% block extra_head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+{% block title %}Financial Overview - Smart Library System{% endblock %}
+
+{% block content %}
+    <!-- Page Title -->
+    <div class="mb-5 text-center">
+        <h1 class="lemon-milk text-primary-700 text-3xl">💰 Financial Overview</h1>
+        <p class="text-gray-600">View your payment history and manage outstanding fines</p>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="max-w-6xl mx-auto mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Total Paid Card -->
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                <div class="flex items-start">
+                    <div class="bg-green-100 rounded-full p-3 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 mb-1">Total Paid</h2>
+                        <p class="text-3xl font-bold text-green-600" id="total-paid-amount">£0.00</p>
+                        <p class="text-sm text-gray-500 mt-1">All payments made to date</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outstanding Fines Card -->
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+                <div class="flex items-start">
+                    <div class="bg-red-100 rounded-full p-3 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 mb-1">Outstanding Fines</h2>
+                        <p class="text-3xl font-bold text-red-600" id="total-unpaid-amount">£0.00</p>
+                        <p class="text-sm text-gray-500 mt-1">Unpaid fines requiring attention</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Sections -->
+    <div class="max-w-6xl mx-auto mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Recent Payments -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="bg-primary-50 p-4 border-b border-primary-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-primary-800">Recent Payments</h2>
+                </div>
+                <div class="p-4">
+                    <div id="recent-payments-list" class="space-y-3">
+                        <div class="animate-pulse flex space-x-4">
+                            <div class="flex-1 space-y-3 py-1">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="animate-pulse flex space-x-4">
+                            <div class="flex-1 space-y-3 py-1">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="no-recent-payments" class="hidden text-center py-4 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p>No payment history found</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Largest Unpaid Fines -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="bg-primary-50 p-4 border-b border-primary-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-primary-800">Recent Unpaid Fines</h2>
+                    <a href="http://localhost:8001/borrowed-books/" class="text-sm font-medium text-primary-700 hover:text-primary-900 flex items-center">
+                        View all overdue books
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+                <div class="p-4">
+                    <div id="largest-fines-list" class="space-y-3">
+                        <div class="animate-pulse flex space-x-4">
+                            <div class="flex-1 space-y-3 py-1">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="animate-pulse flex space-x-4">
+                            <div class="flex-1 space-y-3 py-1">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="no-largest-fines" class="hidden text-center py-4 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p>No unpaid fines - you're all caught up!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS: jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            console.log("Initializing Financial Overview...");
+
+            // Load financial summary
+            loadFinancialSummary();
+
+            // Function to load financial summary
+            function loadFinancialSummary() {
+                $.ajax({
+                    url: "{% url 'financial_summary' %}",
+                    type: "GET",
+                    success: function(response) {
+                        console.log("Financial summary loaded:", response);
+
+                        // Update summary cards
+                        $('#total-paid-amount').text(`£${response.total_paid.toFixed(2)}`);
+                        $('#total-unpaid-amount').text(`£${response.total_unpaid.toFixed(2)}`);
+
+                        // Update recent payments list
+                        updateRecentPaymentsList(response.recent_payments);
+
+                        // Update largest fines list
+                        updateLargestFinesList(response.largest_fines);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading financial summary:", error);
+                    }
+                });
+            }
+
+            // Function to update recent payments list
+            function updateRecentPaymentsList(payments) {
+                const recentPaymentsList = $('#recent-payments-list');
+                recentPaymentsList.empty();
+
+                if (payments.length === 0) {
+                    $('#no-recent-payments').removeClass('hidden');
+                    return;
+                }
+
+                $('#no-recent-payments').addClass('hidden');
+
+                payments.forEach(payment => {
+                    recentPaymentsList.append(`
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm text-gray-500">${payment.payment_date}</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-green-600 font-bold">£${payment.amount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+            // Function to update largest fines list
+            function updateLargestFinesList(fines) {
+                const largestFinesList = $('#largest-fines-list');
+                largestFinesList.empty();
+
+                if (fines.length === 0) {
+                    $('#no-largest-fines').removeClass('hidden');
+                    return;
+                }
+
+                $('#no-largest-fines').addClass('hidden');
+
+                fines.forEach(fine => {
+                    largestFinesList.append(`
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">${fine.book_title}</h4>
+                                    <p class="text-xs text-gray-500">${fine.days_overdue} days overdue (due: ${fine.due_date})</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-red-600 font-bold">£${fine.amount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+        });
+    </script>
+
+    <!-- Additional styles -->
+    <style>
+        /* Animation for loading skeletons */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+{% endblock %}

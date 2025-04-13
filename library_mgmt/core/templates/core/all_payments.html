@@ -1,0 +1,189 @@
+{% extends 'base_after_login.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block title %}All Payments - Smart Library System{% endblock %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Title -->
+    <div class="mb-5 text-center">
+        <h1 class="lemon-milk text-primary-700 text-3xl">💰 All Payments</h1>
+        <p class="text-gray-600">Track and manage all payment transactions</p>
+    </div>
+
+
+    <!-- Payments Summary Card -->
+    <div class="bg-white shadow-md rounded-lg p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-green-800">Total Payments</h3>
+                <p class="text-2xl font-bold text-green-700">Rs. {{ total_payments|default:"0" }}</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-blue-800">Payments This Month</h3>
+                <p class="text-2xl font-bold text-blue-700">Rs. {{ monthly_payments|default:"0" }}</p>
+            </div>
+            <div class="bg-amber-50 p-4 rounded-lg">
+                <h3 class="text-sm font-medium text-amber-800">Outstanding Fines</h3>
+                <p class="text-2xl font-bold text-amber-700">Rs. {{ outstanding_fines|default:"0" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            User
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Paid Amount
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Due Amount
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for payment in payments %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ payment.user.username }}</div>
+                            <div class="text-xs text-gray-500">{{ payment.user.first_name }} {{ payment.user.last_name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">Rs. {{ payment.amount }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">Rs. {{ payment.fine.amount }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ payment.payment_date|date:"M d, Y" }}</div>
+                            <div class="text-xs text-gray-500">{{ payment.payment_date|time:"h:i A" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if payment.amount >= payment.fine.amount %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Paid in Full
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                Partially Paid
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No payments found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if payments.has_other_pages %}
+    <div class="flex justify-center mt-6">
+        <nav class="inline-flex rounded-md shadow">
+            {% if payments.has_previous %}
+            <a href="?page={{ payments.previous_page_number }}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                Previous
+            </a>
+            {% else %}
+            <span class="px-3 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                Previous
+            </span>
+            {% endif %}
+            
+            {% for i in payments.paginator.page_range %}
+                {% if payments.number == i %}
+                <span class="px-3 py-2 border border-gray-300 bg-primary-50 text-sm font-medium text-primary-600">
+                    {{ i }}
+                </span>
+                {% else %}
+                <a href="?page={{ i }}" class="px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    {{ i }}
+                </a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if payments.has_next %}
+            <a href="?page={{ payments.next_page_number }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                Next
+            </a>
+            {% else %}
+            <span class="px-3 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                Next
+            </span>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        
+        searchButton.addEventListener('click', function() {
+            const searchTerm = searchInput.value.trim();
+            const dateFilter = document.getElementById('date-filter').value;
+            
+            let url = '?';
+            if (searchTerm) {
+                url += `search=${encodeURIComponent(searchTerm)}`;
+            }
+            
+            if (dateFilter && dateFilter !== 'all') {
+                if (searchTerm) url += '&';
+                url += `date=${encodeURIComponent(dateFilter)}`;
+            }
+            
+            window.location.href = url;
+        });
+        
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchButton.click();
+            }
+        });
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

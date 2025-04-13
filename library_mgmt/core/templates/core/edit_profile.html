@@ -545,5 +545,48 @@
                 currentAvatar.src = avatarOptions[0].src;
             }
         });
+
     </script>
+<script>
+    document.getElementById('profile-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const data = {
+            first_name: document.getElementById('first_name').value,
+            last_name: document.getElementById('last_name').value,
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            current_password: document.getElementById('current_password').value,
+            new_password: document.getElementById('new_password').value,
+            confirm_password: document.getElementById('confirm_password').value,
+        };
+
+        const response = await fetch("{% url 'edit_profile' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        const successBox = document.createElement('div');
+        successBox.className = 'success-message active';
+        successBox.innerHTML = `
+            <div>
+                <p class="text-green-700 font-semibold">${result.message}</p>
+                <div class="timer-bar"></div>
+            </div>
+        `;
+        document.body.appendChild(successBox);
+
+        setTimeout(() => {
+            successBox.classList.remove('active');
+            setTimeout(() => successBox.remove(), 300);
+        }, 5000);
+    });
+</script>
+
 {% endblock %}

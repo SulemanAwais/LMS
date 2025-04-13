@@ -124,6 +124,7 @@ class Fine(models.Model):
     is_paid = models.BooleanField(default=False)
     paid_date = models.DateField(null=True, blank=True)
     remarks = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Fine of Rs. {self.amount} for {self.borrow_record.user.username}"
@@ -132,7 +133,7 @@ class Fine(models.Model):
 # Payment
 class Payment(models.Model):
     fine = models.ForeignKey(Fine, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=8, decimal_places=2)
     method = models.CharField(max_length=50)
     payment_date = models.DateField(auto_now_add=True)
