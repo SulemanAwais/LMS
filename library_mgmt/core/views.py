@@ -12,7 +12,7 @@ from django.contrib.auth import login, get_user, logout
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.urls import reverse
 from rest_framework.generics import get_object_or_404
 from django.utils import timezone
@@ -134,6 +134,7 @@ def librarian_dashboard_view(request):
             'id': member.id,
             'username': member.username,
             'first_name': member.first_name,
+            'last_name': member.last_name,
             'email': member.email,
             'joined_date': member.date_joined,
             'borrowed_count': borrowed_books.count(),
@@ -644,20 +645,21 @@ def get_financial_summary(request):
 @login_required
 @staff_member_required
 def all_payments_view(request):
-    payments = Payment.objects.select_related('user').all()
+    payments = Payment.objects.select_related('user', 'fine').all()
 
-    # Total paid amount
-    total_payments = payments.filter().aggregate(total=Sum('amount'))['total'] or 0
+    # 1. Total of all payments
+    total_payments = payments.aggregate(total=Sum('amount'))['total'] or 0
 
-    # Total outstanding fines (unpaid)
-    outstanding_fines = payments.filter(status='unpaid').aggregate(total=Sum('amount'))['total'] or 0
+    # 2. Outstanding fines: fine.amount > payment.amount
+    outstanding_fines = payments.filter(
+        fine__amount__gt=F('amount')
+    ).aggregate(total=Sum(F('fine__amount') - F('amount')))['total'] or 0
 
-    # Payments made in current month
+    # 3. Monthly payments (current month)
     now = timezone.now()
     monthly_payments = payments.filter(
-        status='paid',
-        date__year=now.year,
-        date__month=now.month
+        payment_date__year=now.year,
+        payment_date__month=now.month
     ).aggregate(total=Sum('amount'))['total'] or 0
 
     return render(request, 'core/all_payments.html', {

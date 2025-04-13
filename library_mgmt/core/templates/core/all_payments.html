@@ -23,15 +23,15 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-green-50 p-4 rounded-lg">
                 <h3 class="text-sm font-medium text-green-800">Total Payments</h3>
-                <p class="text-2xl font-bold text-green-700">Rs. {{ total_payments|default:"0" }}</p>
+                <p class="text-2xl font-bold text-green-700">£. {{ total_payments|default:"0" }}</p>
             </div>
             <div class="bg-blue-50 p-4 rounded-lg">
                 <h3 class="text-sm font-medium text-blue-800">Payments This Month</h3>
-                <p class="text-2xl font-bold text-blue-700">Rs. {{ monthly_payments|default:"0" }}</p>
+                <p class="text-2xl font-bold text-blue-700">£. {{ monthly_payments|default:"0" }}</p>
             </div>
             <div class="bg-amber-50 p-4 rounded-lg">
                 <h3 class="text-sm font-medium text-amber-800">Outstanding Fines</h3>
-                <p class="text-2xl font-bold text-amber-700">Rs. {{ outstanding_fines|default:"0" }}</p>
+                <p class="text-2xl font-bold text-amber-700">£. {{ outstanding_fines|default:"0" }}</p>
             </div>
         </div>
     </div>
@@ -67,10 +67,10 @@
                             <div class="text-xs text-gray-500">{{ payment.user.first_name }} {{ payment.user.last_name }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">Rs. {{ payment.amount }}</div>
+                            <div class="text-sm font-medium text-gray-900">£. {{ payment.amount }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">Rs. {{ payment.fine.amount }}</div>
+                            <div class="text-sm text-gray-900">£ {{ payment.fine.amount }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ payment.payment_date|date:"M d, Y" }}</div>
