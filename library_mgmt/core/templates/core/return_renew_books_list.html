@@ -1,0 +1,640 @@
+{% extends 'base_after_login.html' %}
+{% load static %}
+{% block extra_head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+{% block title %}Return/Renew Books - Smart Library System{% endblock %}
+
+{% block content %}
+    <!-- Page Title -->
+    <div class="mb-5 text-center">
+        <h1 class="lemon-milk text-primary-700 text-3xl">📚 Return & Renew Books</h1>
+        <p class="text-gray-600">Return your borrowed books or renew your borrowing period</p>
+    </div>
+
+    <!-- Books Table -->
+    <div id="main-content" class="bg-white rounded-lg shadow-md p-4 mb-8 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table id="book-table" class="table table-striped" width="100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Borrow Date</th>
+                        <th>Due Date</th>
+                        <th>Return Date</th>
+                        <th>Renewals</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Return Book Modal -->
+    <div id="return-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-95 opacity-0" id="return-modal-content">
+            <!-- Close button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none" id="close-return-modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="bg-primary-50 p-6 border-b border-primary-100 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-primary-800 lemon-milk">Return Book</h2>
+                <p class="text-gray-600">Confirm the return of your borrowed book</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- Hidden form field to store book ID -->
+                <input type="hidden" id="return_book_id" name="return_book_id" value="">
+
+                <!-- Book Details Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Book Details</h3>
+
+                    <div class="space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Title:</span>
+                            <span class="font-semibold text-gray-800" id="return-book-title"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Author:</span>
+                            <span class="text-gray-800" id="return-book-author"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Borrow Date:</span>
+                            <span class="text-gray-800" id="return-borrow-date"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Due Date:</span>
+                            <span class="text-gray-800" id="return-due-date"></span>
+                        </div>
+
+                        <div id="fine-section" class="hidden">
+                            <div class="mt-4 p-4 bg-red-50 rounded-lg border border-red-100">
+                                <h4 class="text-red-700 font-medium mb-2">Late Return Fee</h4>
+                                <p class="text-red-600">This book is overdue. A fine of <span id="fine-amount" class="font-bold"></span> will be applied.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Return Condition -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Book Condition</h3>
+
+                    <div>
+                        <label for="book_condition" class="block text-sm font-medium text-gray-700 mb-1">Condition on Return</label>
+                        <select id="book_condition" name="book_condition" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="good">Good - No damage</option>
+                            <option value="fair">Fair - Minor wear</option>
+                            <option value="poor">Poor - Significant damage</option>
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">Please select the condition of the book you are returning.</p>
+                    </div>
+                </div>
+
+                <!-- Agreement -->
+                <div class="mb-8">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="return-agreement" name="return-agreement" type="checkbox" required class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="return-agreement" class="font-medium text-gray-700">I confirm that I am returning this book</label>
+                            <p class="text-gray-500">By checking this box, you confirm that you are returning the book in the condition specified above.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button type="button" id="cancel-return" class="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-center lemon-milk btn-hover transition-colors">
+                        CANCEL
+                    </button>
+                    <button type="button" id="confirm-return" class="w-full sm:w-auto px-6 py-3 bg-primary-700 text-white rounded-md hover:bg-primary-800 lemon-milk btn-hover transition-colors">
+                        CONFIRM RETURN
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Renew Book Modal -->
+    <div id="renew-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-95 opacity-0" id="renew-modal-content">
+            <!-- Close button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none" id="close-renew-modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="bg-primary-50 p-6 border-b border-primary-100 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-primary-800 lemon-milk">Renew Book</h2>
+                <p class="text-gray-600">Extend your borrowing period</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- Hidden form field to store book ID -->
+                <input type="hidden" id="renew_book_id" name="renew_book_id" value="">
+
+                <!-- Book Details Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Book Details</h3>
+
+                    <div class="space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Title:</span>
+                            <span class="font-semibold text-gray-800" id="renew-book-title"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Author:</span>
+                            <span class="text-gray-800" id="renew-book-author"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Current Due:</span>
+                            <span class="text-gray-800" id="renew-current-due"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Renewals:</span>
+                            <span class="text-gray-800" id="renew-count"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Renewal Options -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Renewal Options</h3>
+
+                    <div>
+                        <label for="renew_period" class="block text-sm font-medium text-gray-700 mb-1">Extension Period</label>
+                        <select id="renew_period" name="renew_period" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="3">3 days</option>
+                            <option value="7">7 days</option>
+                            <option value="15">15 days</option>
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">Select how many additional days you would like to borrow this book.</p>
+
+                        <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                            <p class="text-blue-700">New due date will be: <span id="new-due-date" class="font-medium"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agreement -->
+                <div class="mb-8">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="renew-agreement" name="renew-agreement" type="checkbox" required class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="renew-agreement" class="font-medium text-gray-700">I agree to the library's renewal policies</label>
+                            <p class="text-gray-500">By checking this box, you agree to return the book by the new due date or face applicable fines.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button type="button" id="cancel-renew" class="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-center lemon-milk btn-hover transition-colors">
+                        CANCEL
+                    </button>
+                    <button type="button" id="confirm-renew" class="w-full sm:w-auto px-6 py-3 bg-primary-700 text-white rounded-md hover:bg-primary-800 lemon-milk btn-hover transition-colors">
+                        CONFIRM RENEWAL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="success-notification" class="fixed bottom-5 right-5 bg-white rounded-lg shadow-lg p-4 flex items-center transform transition-all duration-300 translate-y-20 opacity-0 invisible max-w-md">
+        <div class="bg-green-100 rounded-full p-2 mr-4">
+            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <h4 class="text-gray-800 font-medium" id="success-title">Success!</h4>
+            <p class="text-gray-600 text-sm" id="success-message">Operation completed successfully.</p>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                <div class="bg-green-500 h-1.5 rounded-full" id="timer-bar" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lordicon script -->
+    <script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+    <!-- JS: jQuery + DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <script type="text/javascript">
+        $(document).ready(function() {
+            console.log("Initializing Return/Renew Books DataTable...");
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            // Initialize DataTable
+            var table = $('#book-table').DataTable({
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'return_renew_list' %}",
+                    "type": "GET",
+                    "error": function(xhr, status, error) {
+                        console.error("AJAX request failed. Status:", status, "Error:", error);
+                    }
+                },
+                "columns": [
+                    { "data": "id", "className": "text-center max-width-id" },
+                    { "data": "title", "className": "text-center" },
+                    { "data": "author", "className": "text-center" },
+                    { "data": "borrow_date", "className": "text-center" },
+                    {
+                        "data": "due_date",
+                        "className": "text-center",
+                        "render": function(data, type, row) {
+                            // Check if the due date is in the past
+                            const dueDate = new Date(data);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0); // Set to beginning of day for comparison
+
+                            if (row.return_date !== "N/A") {
+                                return data; // Just show the date if already returned
+                            } else if (dueDate < today) {
+                                return `<span class="text-red-600 font-medium">${data} (Overdue)</span>`;
+                            } else if (dueDate.toDateString() === today.toDateString()) {
+                                return `<span class="text-amber-600 font-medium">${data} (Due Today)</span>`;
+                            } else {
+                                return data;
+                            }
+                        }
+                    },
+                    { "data": "return_date", "className": "text-center" },
+                    { "data": "renew_count", "className": "text-center" },
+                    {
+                        "data": null,
+                        "defaultContent": "-",
+                        "orderable": false,
+                        "className": "text-center",
+                        "render": function (data, type, row) {
+                            let actions = `<div class="flex items-center justify-center space-x-2">`;
+
+                            // Only show return button if book is not returned yet
+                            if (row.return_date === "N/A") {
+                                actions += `
+                                <button class="return-btn" onclick="openReturnModal('${row.title}', '${row.author}', '${row.borrow_date}', '${row.due_date}', ${row.id})">
+                                    Return
+                                </button>`;
+
+                                // Only show renew button if book is not returned yet
+                                actions += `
+                                <button class="renew-btn" onclick="openRenewModal('${row.title}', '${row.author}', '${row.due_date}', ${row.renew_count}, ${row.id})">
+                                    Renew
+                                </button>`;
+                            } else {
+                                actions += `<span class="text-gray-500">Returned</span>`;
+                            }
+
+                            actions += `</div>`;
+                            return actions;
+                        }
+                    }
+                ],
+                columnDefs: [
+                    {
+                      targets: [1,2],
+                      createdCell: function(td, cellData, rowData, row, col) {
+                        $(td).addClass('ellipsis-cell');
+                      }
+                    }
+                ],
+                "autoWidth": false,
+                "language": {
+                    "emptyTable": "No books found",
+                    "zeroRecords": "No books found",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ books",
+                    "infoEmpty": "Showing 0 to 0 of 0 books",
+                    "infoFiltered": "(filtered from _MAX_ total books)",
+                    "lengthMenu": "Show _MENU_ books per page",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Prev"
+                    }
+                },
+                "responsive": true,
+                "pageLength": 10,
+                "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]]
+            });
+
+            // Fix header width after table initialization
+            $(window).resize(function() {
+                table.columns.adjust().draw();
+            });
+
+            console.log("Return/Renew Books DataTable initialized.");
+
+            // Return Modal functionality
+            const returnModal = document.getElementById('return-modal');
+            const returnModalContent = document.getElementById('return-modal-content');
+            const closeReturnModal = document.getElementById('close-return-modal');
+            const cancelReturn = document.getElementById('cancel-return');
+            const confirmReturn = document.getElementById('confirm-return');
+
+            // Renew Modal functionality
+            const renewModal = document.getElementById('renew-modal');
+            const renewModalContent = document.getElementById('renew-modal-content');
+            const closeRenewModal = document.getElementById('close-renew-modal');
+            const cancelRenew = document.getElementById('cancel-renew');
+            const confirmRenew = document.getElementById('confirm-renew');
+
+            // Success notification
+            const successNotification = document.getElementById('success-notification');
+            const successTitle = document.getElementById('success-title');
+            const successMessage = document.getElementById('success-message');
+            const timerBar = document.getElementById('timer-bar');
+
+            // Current book ID being processed
+            let currentBookId = null;
+
+            // Close return modal function
+            function closeReturnModalFunc() {
+                returnModal.classList.add('hidden');
+                returnModalContent.classList.remove('modal-enter');
+                // Reset form
+                document.getElementById('return-agreement').checked = false;
+                document.getElementById('book_condition').value = 'good';
+                document.getElementById('fine-section').classList.add('hidden');
+            }
+
+            // Close return modal when clicking close button or cancel
+            closeReturnModal.addEventListener('click', closeReturnModalFunc);
+            cancelReturn.addEventListener('click', closeReturnModalFunc);
+
+            // Close return modal when clicking outside
+            returnModal.addEventListener('click', function(e) {
+                if (e.target === returnModal) {
+                    closeReturnModalFunc();
+                }
+            });
+
+            // Close renew modal function
+            function closeRenewModalFunc() {
+                renewModal.classList.add('hidden');
+                renewModalContent.classList.remove('modal-enter');
+                // Reset form
+                document.getElementById('renew-agreement').checked = false;
+                document.getElementById('renew_period').value = '7';
+            }
+
+            // Close renew modal when clicking close button or cancel
+            closeRenewModal.addEventListener('click', closeRenewModalFunc);
+            cancelRenew.addEventListener('click', closeRenewModalFunc);
+
+            // Close renew modal when clicking outside
+            renewModal.addEventListener('click', function(e) {
+                if (e.target === renewModal) {
+                    closeRenewModalFunc();
+                }
+            });
+
+            // Confirm return
+            confirmReturn.addEventListener('click', function() {
+                if (!document.getElementById('return-agreement').checked) {
+                    alert('Please confirm that you are returning this book.');
+                    return;
+                }
+
+                const bookCondition = document.getElementById('book_condition').value;
+
+                // Make an AJAX call to your backend
+                $.ajax({
+                    url: `/return/${currentBookId}/`,
+                    type: "POST",
+                    data: {
+                        condition: bookCondition,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function(response) {
+                        console.log("Return success:", response);
+                        closeReturnModalFunc();
+                        showSuccessNotification("Book Returned", "Book has been successfully returned.");
+                        // Refresh the table
+                        table.ajax.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error returning book:", error, "Status:", status, "Response:", xhr.responseText);
+                        alert("An error occurred while returning the book  xhr.responseText);
+                        alert("An error occurred while returning the book.");
+                    }
+                });
+            });
+
+            // Confirm renew
+            confirmRenew.addEventListener('click', function() {
+                if (!document.getElementById('renew-agreement').checked) {
+                    alert('Please agree to the library\'s renewal policies.');
+                    return;
+                }
+
+                const renewPeriod = document.getElementById('renew_period').value;
+
+                // Make an AJAX call to your backend
+                $.ajax({
+                    url: `/renew/${currentBookId}/`,
+                    type: "POST",
+                    data: {
+                        period: renewPeriod,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function(response) {
+                        console.log("Renew success:", response);
+                        closeRenewModalFunc();
+                        showSuccessNotification("Book Renewed", "Your borrowing period has been extended successfully.");
+                        // Refresh the table
+                        table.ajax.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error renewing book:", error, "Status:", status, "Response:", xhr.responseText);
+                        alert("An error occurred while renewing the book.");
+                    }
+                });
+            });
+
+            // Show success notification with timer
+            function showSuccessNotification(title, message) {
+                successTitle.textContent = title;
+                successMessage.textContent = message;
+                successNotification.classList.remove('invisible', 'opacity-0', 'translate-y-20');
+
+                // Start the timer animation
+                let timeLeft = 5; // 5 seconds
+                const timerInterval = setInterval(function() {
+                    timeLeft -= 0.1;
+                    const percentage = (timeLeft / 5) * 100;
+                    timerBar.style.width = percentage + '%';
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        successNotification.classList.add('invisible', 'opacity-0', 'translate-y-20');
+                    }
+                }, 100);
+            }
+
+            // Make success notification dismissible by clicking anywhere
+            document.addEventListener('click', function() {
+                if (!successNotification.classList.contains('invisible')) {
+                    successNotification.classList.add('invisible', 'opacity-0', 'translate-y-20');
+                }
+            });
+
+            // Update new due date when renew period changes
+            document.getElementById('renew_period').addEventListener('change', function() {
+                const currentDueDate = document.getElementById('renew-current-due').textContent;
+                const daysToAdd = parseInt(this.value);
+
+                // Calculate new due date
+                const dueDate = new Date(currentDueDate);
+                dueDate.setDate(dueDate.getDate() + daysToAdd);
+
+                // Format the date as YYYY-MM-DD
+                const newDueDate = dueDate.toISOString().split('T')[0];
+
+                // Update the display
+                document.getElementById('new-due-date').textContent = newDueDate;
+            });
+
+            // Expose the openReturnModal function globally
+            window.openReturnModal = function(title, author, borrowDate, dueDate, bookId) {
+                console.log("Opening return modal for book:", title, "ID:", bookId);
+
+                // Set current book ID
+                currentBookId = bookId;
+                document.getElementById('return_book_id').value = bookId;
+
+                // Populate modal with book details
+                document.getElementById('return-book-title').textContent = title;
+                document.getElementById('return-book-author').textContent = author;
+                document.getElementById('return-borrow-date').textContent = borrowDate;
+                document.getElementById('return-due-date').textContent = dueDate;
+
+                // Check if book is overdue
+                const dueDateObj = new Date(dueDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Set to beginning of day for comparison
+
+                if (dueDateObj < today) {
+                    // Calculate fine (example: $1 per day overdue)
+                    const daysOverdue = Math.ceil((today - dueDateObj) / (1000 * 60 * 60 * 24));
+                    const fineAmount = daysOverdue * 1.00; // $1 per day
+
+                    // Show fine section
+                    document.getElementById('fine-section').classList.remove('hidden');
+                    document.getElementById('fine-amount').textContent = `$${fineAmount.toFixed(2)}`;
+                } else {
+                    // Hide fine section
+                    document.getElementById('fine-section').classList.add('hidden');
+                }
+
+                // Show modal
+                returnModal.classList.remove('hidden');
+                setTimeout(() => {
+                    returnModalContent.classList.add('modal-enter');
+                }, 10);
+            };
+
+            // Expose the openRenewModal function globally
+            window.openRenewModal = function(title, author, dueDate, renewCount, bookId) {
+                console.log("Opening renew modal for book:", title, "ID:", bookId);
+
+                // Set current book ID
+                currentBookId = bookId;
+                document.getElementById('renew_book_id').value = bookId;
+
+                // Populate modal with book details
+                document.getElementById('renew-book-title').textContent = title;
+                document.getElementById('renew-book-author').textContent = author;
+                document.getElementById('renew-current-due').textContent = dueDate;
+                document.getElementById('renew-count').textContent = renewCount;
+
+                // Calculate initial new due date (default 7 days)
+                const dueDateObj = new Date(dueDate);
+                dueDateObj.setDate(dueDateObj.getDate() + 7);
+                const newDueDate = dueDateObj.toISOString().split('T')[0];
+                document.getElementById('new-due-date').textContent = newDueDate;
+
+                // Show modal
+                renewModal.classList.remove('hidden');
+                setTimeout(() => {
+                    renewModalContent.classList.add('modal-enter');
+                }, 10);
+            };
+        });
+    </script>
+
+    <!-- Additional styles specific to return/renew page -->
+    <style>
+        /* Return and Renew button styling */
+        .return-btn, .renew-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            margin: 0 4px;
+        }
+
+        .return-btn {
+            background-color: #0c4a6e;
+            color: white;
+        }
+
+        .return-btn:hover {
+            background-color: #075985;
+        }
+
+        .renew-btn {
+            background-color: #047857;
+            color: white;
+        }
+
+        .renew-btn:hover {
+            background-color: #065f46;
+        }
+
+        /* Column widths for return/renew table */
+        #book-table th:nth-child(1), #book-table td:nth-child(1) { width: 8%; } /* ID */
+        #book-table th:nth-child(2), #book-table td:nth-child(2) { width: 18%; } /* Title */
+        #book-table th:nth-child(3), #book-table td:nth-child(3) { width: 15%; } /* Author */
+        #book-table th:nth-child(4), #book-table td:nth-child(4) { width: 12%; } /* Borrow Date */
+        #book-table th:nth-child(5), #book-table td:nth-child(5) { width: 12%; } /* Due Date */
+        #book-table th:nth-child(6), #book-table td:nth-child(6) { width: 12%; } /* Return Date */
+        #book-table th:nth-child(7), #book-table td:nth-child(7) { width: 8%; } /* Renewals */
+        #book-table th:nth-child(8), #book-table td:nth-child(8) { width: 15%; } /* Actions */
+    </style>
+{% endblock %}

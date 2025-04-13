@@ -1,0 +1,442 @@
+{% extends 'base_after_login.html' %}
+{% load static %}
+{% block extra_head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+{% block title %}My Fines - Smart Library System{% endblock %}
+
+{% block content %}
+    <!-- Page Title -->
+    <div class="mb-5 text-center">
+        <h1 class="lemon-milk text-primary-700 text-3xl">💰 My Fines</h1>
+        <p class="text-gray-600">View and pay your library fines</p>
+    </div>
+
+    <!-- Fines Table -->
+    <div id="main-content" class="bg-white rounded-lg shadow-md p-4 mb-8 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table id="book-table" class="table table-striped" width="100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Book Title</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pay Fine Modal -->
+    <div id="payment-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-95 opacity-0" id="payment-modal-content">
+            <!-- Close button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none" id="close-payment-modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="bg-primary-50 p-6 border-b border-primary-100 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-primary-800 lemon-milk">Pay Fine</h2>
+                <p class="text-gray-600">Complete your payment to clear the fine</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- Hidden form field to store fine ID -->
+                <input type="hidden" id="fine_id" name="fine_id" value="">
+                
+                <!-- Fine Details Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Fine Details</h3>
+
+                    <div class="space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Book:</span>
+                            <span class="font-semibold text-gray-800" id="fine-book-title"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Amount:</span>
+                            <span class="text-red-600 font-bold text-lg" id="fine-amount"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <span class="text-gray-500 font-medium w-24">Date:</span>
+                            <span class="text-gray-800" id="fine-date"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-primary-800 mb-4">Payment Method</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input id="payment-method-card" name="payment-method" type="radio" checked class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300">
+                            <label for="payment-method-card" class="ml-3 block text-gray-700">
+                                Credit/Debit Card
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input id="payment-method-online" name="payment-method" type="radio" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300">
+                            <label for="payment-method-online" class="ml-3 block text-gray-700">
+                                Online Banking
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input id="payment-method-cash" name="payment-method" type="radio" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300">
+                            <label for="payment-method-cash" class="ml-3 block text-gray-700">
+                                Pay at Library (Cash)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Details (shown only when card payment is selected) -->
+                <div id="card-details-section" class="mb-6 p-4 border border-gray-200 rounded-lg">
+                    <h4 class="font-medium text-gray-700 mb-3">Card Details</h4>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="card-number" class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                            <input type="text" id="card-number" placeholder="1234 5678 9012 3456" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="expiry-date" class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                                <input type="text" id="expiry-date" placeholder="MM/YY" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            </div>
+                            
+                            <div>
+                                <label for="cvv" class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                                <input type="text" id="cvv" placeholder="123" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="card-name" class="block text-sm font-medium text-gray-700 mb-1">Name on Card</label>
+                            <input type="text" id="card-name" placeholder="John Doe" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agreement -->
+                <div class="mb-8">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="payment-agreement" name="payment-agreement" type="checkbox" required class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="payment-agreement" class="font-medium text-gray-700">I authorize this payment</label>
+                            <p class="text-gray-500">By checking this box, you authorize the library to process this payment according to the selected method.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button type="button" id="cancel-payment" class="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-center lemon-milk btn-hover transition-colors">
+                        CANCEL
+                    </button>
+                    <button type="button" id="confirm-payment" class="w-full sm:w-auto px-6 py-3 bg-primary-700 text-white rounded-md hover:bg-primary-800 lemon-milk btn-hover transition-colors">
+                        CONFIRM PAYMENT
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="success-notification" class="fixed bottom-5 right-5 bg-white rounded-lg shadow-lg p-4 flex items-center transform transition-all duration-300 translate-y-20 opacity-0 invisible max-w-md">
+        <div class="bg-green-100 rounded-full p-2 mr-4">
+            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <h4 class="text-gray-800 font-medium">Payment Successful!</h4>
+            <p class="text-gray-600 text-sm">Your fine has been paid successfully.</p>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                <div class="bg-green-500 h-1.5 rounded-full" id="timer-bar" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS: jQuery + DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <script type="text/javascript">
+        $(document).ready(function() {
+            console.log("Initializing Fines DataTable...");
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // Initialize DataTable
+            var table = $('#book-table').DataTable({
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'fines_list' %}",
+                    "type": "GET",
+                    "error": function(xhr, status, error) {
+                        console.error("AJAX request failed. Status:", status, "Error:", error);
+                    }
+                },
+                "columns": [
+                    { "data": "id", "className": "text-center max-width-id" },
+                    { "data": "book_title", "className": "text-center" },
+                    { 
+                        "data": "amount", 
+                        "className": "text-center",
+                        "render": function(data, type, row) {
+                            return `<span class="text-red-600 font-medium">$${data}</span>`;
+                        }
+                    },
+                    { 
+                        "data": "paid", 
+                        "className": "text-center",
+                        "render": function(data, type, row) {
+                            if (data === "Yes") {
+                                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Paid</span>`;
+                            } else {
+                                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Unpaid</span>`;
+                            }
+                        }
+                    },
+                    { "data": "fine_date", "className": "text-center" },
+                    {
+                        "data": null,
+                        "defaultContent": "-",
+                        "orderable": false,
+                        "className": "text-center",
+                        "render": function (data, type, row) {
+                            if (row.paid === "No") {
+                                return `<button class="pay-fine-btn" onclick="openPaymentModal('${row.book_title}', '${row.amount}', '${row.fine_date}', ${row.id})">Pay Fine</button>`;
+                            } else {
+                                return `<span class="text-green-600 font-medium">Paid</span>`;
+                            }
+                        }
+                    }
+                ],
+                columnDefs: [
+                    {
+                      targets: [1], 
+                      createdCell: function(td, cellData, rowData, row, col) {
+                        $(td).addClass('ellipsis-cell');
+                      }
+                    }
+                ],
+                "autoWidth": false,
+                "language": {
+                    "emptyTable": "No fines found",
+                    "zeroRecords": "No fines found",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ fines",
+                    "infoEmpty": "Showing 0 to 0 of 0 fines",
+                    "infoFiltered": "(filtered from _MAX_ total fines)",
+                    "lengthMenu": "Show _MENU_ fines per page",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Prev"
+                    }
+                },
+                "responsive": true,
+                "pageLength": 10,
+                "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]]
+            });
+
+            // Fix header width after table initialization
+            $(window).resize(function() {
+                table.columns.adjust().draw();
+            });
+
+            console.log("Fines DataTable initialized.");
+            
+            // Payment Modal functionality
+            const paymentModal = document.getElementById('payment-modal');
+            const paymentModalContent = document.getElementById('payment-modal-content');
+            const closePaymentModal = document.getElementById('close-payment-modal');
+            const cancelPayment = document.getElementById('cancel-payment');
+            const confirmPayment = document.getElementById('confirm-payment');
+            const successNotification = document.getElementById('success-notification');
+            const timerBar = document.getElementById('timer-bar');
+            
+            // Current fine ID being paid
+            let currentFineId = null;
+            
+            // Toggle card details section based on payment method selection
+            $('input[name="payment-method"]').on('change', function() {
+                if (this.id === 'payment-method-card') {
+                    $('#card-details-section').show();
+                } else {
+                    $('#card-details-section').hide();
+                }
+            });
+            
+            // Close payment modal function
+            function closePaymentModalFunc() {
+                paymentModal.classList.add('hidden');
+                paymentModalContent.classList.remove('modal-enter');
+                // Reset form
+                document.getElementById('payment-agreement').checked = false;
+                document.getElementById('payment-method-card').checked = true;
+                document.getElementById('card-details-section').style.display = 'block';
+                document.getElementById('card-number').value = '';
+                document.getElementById('expiry-date').value = '';
+                document.getElementById('cvv').value = '';
+                document.getElementById('card-name').value = '';
+            }
+            
+            // Close payment modal when clicking close button or cancel
+            closePaymentModal.addEventListener('click', closePaymentModalFunc);
+            cancelPayment.addEventListener('click', closePaymentModalFunc);
+            
+            // Close payment modal when clicking outside
+            paymentModal.addEventListener('click', function(e) {
+                if (e.target === paymentModal) {
+                    closePaymentModalFunc();
+                }
+            });
+            
+            // Confirm payment
+            confirmPayment.addEventListener('click', function() {
+                if (!document.getElementById('payment-agreement').checked) {
+                    alert('Please authorize this payment by checking the agreement box.');
+                    return;
+                }
+                
+                const paymentMethod = document.querySelector('input[name="payment-method"]:checked').id;
+                
+                // Validate card details if card payment is selected
+                if (paymentMethod === 'payment-method-card') {
+                    const cardNumber = document.getElementById('card-number').value.trim();
+                    const expiryDate = document.getElementById('expiry-date').value.trim();
+                    const cvv = document.getElementById('cvv').value.trim();
+                    const cardName = document.getElementById('card-name').value.trim();
+                    
+                    if (!cardNumber || !expiryDate || !cvv || !cardName) {
+                        alert('Please fill in all card details.');
+                        return;
+                    }
+                }
+                
+                // Make an AJAX call to your backend
+                $.ajax({
+                    url: `/pay-fine/${currentFineId}/`,
+                    type: "POST",
+                    data: {
+                        payment_method: paymentMethod,
+                        csrfmiddlewaretoken: csrfToken
+                    },
+                    success: function(response) {
+                        console.log("Payment success:", response);
+                        closePaymentModalFunc();
+                        showSuccessNotification();
+                        // Refresh the table
+                        table.ajax.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error processing payment:", error, "Status:", status, "Response:", xhr.responseText);
+                        alert("An error occurred while processing your payment.");
+                    }
+                });
+            });
+            
+            // Show success notification with timer
+            function showSuccessNotification() {
+                successNotification.classList.remove('invisible', 'opacity-0', 'translate-y-20');
+                
+                // Start the timer animation
+                let timeLeft = 5; // 5 seconds
+                const timerInterval = setInterval(function() {
+                    timeLeft -= 0.1;
+                    const percentage = (timeLeft / 5) * 100;
+                    timerBar.style.width = percentage + '%';
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        successNotification.classList.add('invisible', 'opacity-0', 'translate-y-20');
+                    }
+                }, 100);
+            }
+            
+            // Make success notification dismissible by clicking anywhere
+            document.addEventListener('click', function() {
+                if (!successNotification.classList.contains('invisible')) {
+                    successNotification.classList.add('invisible', 'opacity-0', 'translate-y-20');
+                }
+            });
+            
+            // Expose the openPaymentModal function globally
+            window.openPaymentModal = function(bookTitle, amount, fineDate, fineId) {
+                console.log("Opening payment modal for fine ID:", fineId);
+                
+                // Set current fine ID
+                currentFineId = fineId;
+                document.getElementById('fine_id').value = fineId;
+                
+                // Populate modal with fine details
+                document.getElementById('fine-book-title').textContent = bookTitle;
+                document.getElementById('fine-amount').textContent = `$${amount}`;
+                document.getElementById('fine-date').textContent = fineDate;
+                
+                // Show modal
+                paymentModal.classList.remove('hidden');
+                setTimeout(() => {
+                    paymentModalContent.classList.add('modal-enter');
+                }, 10);
+            };
+        });
+    </script>
+
+    <!-- Additional styles specific to fines page -->
+    <style>
+        /* Pay Fine button styling */
+        .pay-fine-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #0c4a6e;
+            color: white;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .pay-fine-btn:hover {
+            background-color: #075985;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .pay-fine-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Column widths for fines table */
+        #book-table th:nth-child(1), #book-table td:nth-child(1) { width: 8%; } /* ID */
+        #book-table th:nth-child(2), #book-table td:nth-child(2) { width: 30%; } /* Book Title */
+        #book-table th:nth-child(3), #book-table td:nth-child(3) { width: 15%; } /* Amount */
+        #book-table th:nth-child(4), #book-table td:nth-child(4) { width: 15%; } /* Status */
+        #book-table th:nth-child(5), #book-table td:nth-child(5) { width: 15%; } /* Date */
+        #book-table th:nth-child(6), #book-table td:nth-child(6) { width: 17%; } /* Actions */
+    </style>
+{% endblock %}

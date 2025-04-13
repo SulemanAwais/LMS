@@ -2,13 +2,20 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-
 # User with roles
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
-# User with roles and verification for Librarians
+class Library(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -32,6 +39,8 @@ class User(AbstractUser):
     joined_date = models.DateField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    library = models.ForeignKey(Library, on_delete=models.SET_NULL, null=True, blank=True)
+
 
     def __str__(self):
         return f"{self.username} ({self.role})"
@@ -85,6 +94,8 @@ class Book(models.Model):
     total_copies = models.PositiveIntegerField()
     available_copies = models.PositiveIntegerField()
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
+    library = models.ForeignKey(Library, on_delete=models.CASCADE)
+
 
     def __str__(self):
         return f"{self.title} by {self.author}"
@@ -99,6 +110,7 @@ class BorrowRecord(models.Model):
     return_date = models.DateField(null=True, blank=True)
     returned = models.BooleanField(default=False)
     renew_count = models.IntegerField(default=0)
+    is_reserved = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} borrowed {self.book.title}"
@@ -106,13 +118,15 @@ class BorrowRecord(models.Model):
 
 # Fine
 class Fine(models.Model):
-    borrow_record = models.OneToOneField(BorrowRecord, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=8, decimal_places=2)
-    paid = models.BooleanField(default=False)
-    fine_date = models.DateField(auto_now_add=True)
+    borrow_record = models.ForeignKey('BorrowRecord', on_delete=models.CASCADE, related_name='fines')
+    amount = models.DecimalField(max_digits=6, decimal_places=2)
+    issued_date = models.DateField(auto_now_add=True)
+    is_paid = models.BooleanField(default=False)
+    paid_date = models.DateField(null=True, blank=True)
+    remarks = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Fine for {self.borrow_record}"
+        return f"Fine of Rs. {self.amount} for {self.borrow_record.user.username}"
 
 
 # Payment
