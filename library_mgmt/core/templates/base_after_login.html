@@ -8,6 +8,9 @@
     <title>{% block title %}Smart Library System{% endblock %}</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+        {% load static %}
+        <link rel="shortcut icon" href="{% static 'images/favicon.svg' %}" type="image/x-icon">
+
     <script>
         tailwind.config = {
             theme: {

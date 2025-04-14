@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>{% block title %}Smart Library System{% endblock %}</title>
+    {% load static %}
+    <link rel="shortcut icon" href="{% static 'images/favicon.svg' %}" type="image/x-icon">
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -105,7 +107,7 @@
 
             <nav class="hidden md:flex space-x-6">
                 <a href="{% url 'home' %}" class="text-white font-medium lemon-milk link-hover">HOME</a>
-                <a href="{% url 'home' %}" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">ABOUT</a>
+                <a href="{% url 'about' %}" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">ABOUT</a>
             </nav>
 
             <div class="flex items-center space-x-3">
