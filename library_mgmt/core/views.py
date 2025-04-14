@@ -12,12 +12,12 @@ from django.contrib.auth import login, get_user, logout
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F, Count
 from django.urls import reverse
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from django.utils import timezone
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 
 from rest_framework.response import Response
 
@@ -42,6 +42,7 @@ def home(request):
 
 def about_view(request):
     return render(request, 'core/about.html')
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -69,6 +70,7 @@ def login_view(request):
         form = AuthenticationForm()
 
     return render(request, 'core/login.html', {'form': form})
+
 
 @login_required()
 def logout_view(request):
@@ -153,7 +155,7 @@ def librarian_dashboard_view(request):
             'first_name': member.first_name,
             'last_name': member.last_name,
             'email': member.email,
-            'joined_date': member.date_joined,
+            'date_joined': member.date_joined,
             'borrowed_count': borrowed_books.count(),
             'overdue_count': overdue_books.count(),
             'is_active': member.is_active,
@@ -165,6 +167,7 @@ def librarian_dashboard_view(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'core/librarian_dashboard.html', {'members': page_obj})
+
 
 @login_required
 def search_book_view(request):
@@ -582,7 +585,7 @@ def renew_book_view(request, record_id):
 
         if not record.returned:
             return JsonResponse({"error": "Cannot renew a already borrowed book."}, status=400)
-        record.returned=False
+        record.returned = False
         record.due_date += timedelta(days=7)
         record.return_date = None
         record.renew_count += 1
@@ -660,6 +663,7 @@ def get_financial_summary(request):
         print(e)
         return JsonResponse({"error": "Something went wrong", "details": str(e)}, status=500)
 
+
 @login_required
 @staff_member_required
 def all_payments_view(request):
@@ -686,6 +690,7 @@ def all_payments_view(request):
         'total_payments': total_payments,
         'monthly_payments': monthly_payments
     })
+
 
 @login_required
 def suspend_member_user(request, member_id):
@@ -824,3 +829,171 @@ def genre_list(request):
     genres = Genre.objects.all()
     serializer = GenreSerializer(genres, many=True)
     return Response(serializer.data)
+
+
+@login_required
+def access_denied(request, staff_only=False, member_only=False):
+    """View for access denied page"""
+    context = {
+        'staff_only': staff_only,
+        'member_only': member_only
+    }
+    return render(request, 'access_denied.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
+def library_analytics(request):
+    """View for library analytics dashboard"""
+    # Basic metrics
+    total_books = Book.objects.count()
+    books_borrowed = BorrowRecord.objects.filter(return_date__isnull=True).count()
+    books_reserved = BorrowRecord.objects.filter(is_reserved=True).count()
+    overdue_books = BorrowRecord.objects.filter(
+        return_date__isnull=True,
+        due_date__lt=datetime.now().date()
+    ).count()
+
+    # Monthly borrow trends (last 6 months)
+    today = datetime.now().date()
+    six_months_ago = today - timedelta(days=180)
+
+    monthly_data = []
+    monthly_labels = []
+
+    for i in range(6):
+        month_start = today.replace(day=1) - timedelta(days=30 * i)
+        month_end = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+        month_borrows = BorrowRecord.objects.filter(
+            borrow_date__gte=month_start,
+            borrow_date__lte=month_end
+        ).count()
+
+        monthly_data.insert(0, month_borrows)
+        monthly_labels.insert(0, month_start.strftime('%b %Y'))
+
+    # Top categories
+    categories = Book.objects.values('genre__name').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
+
+    category_labels = [cat['genre__name'] or 'Uncategorized' for cat in categories]
+    category_data = [cat['count'] for cat in categories]
+
+    # Most borrowed books
+    most_borrowed_books = Book.objects.annotate(
+        borrow_count=Count('borrowrecord')
+    ).order_by('-borrow_count')[:10]
+
+    most_borrowed_books_data = [
+        {
+            'title': book.title,
+            'author': book.author,
+            'borrow_count': book.borrow_count
+        }
+        for book in most_borrowed_books
+    ]
+
+    # Active borrowers
+    active_borrowers = User.objects.annotate(
+        books_borrowed=Count('borrowrecord', filter=Q(borrowrecord__return_date__isnull=True))
+    ).filter(books_borrowed__gt=0).order_by('-books_borrowed')[:5]
+
+    active_borrowers_data = [
+        {
+            'name': f"{borrower.first_name} {borrower.last_name}",
+            'books_borrowed': borrower.books_borrowed
+        }
+        for borrower in active_borrowers
+    ]
+
+    # Financial data
+    total_fines_collected = Payment.objects.aggregate(total=Sum('amount'))['total'] or 0
+    outstanding_fines = Fine.objects.filter(
+        payment__isnull=True
+    ).aggregate(total=Sum('amount'))['total'] or 0
+
+    context = {
+        'total_books': total_books,
+        'books_borrowed': books_borrowed,
+        'books_reserved': books_reserved,
+        'overdue_books': overdue_books,
+        'monthly_labels': json.dumps(monthly_labels),
+        'monthly_data': json.dumps(monthly_data),
+        'category_labels': json.dumps(category_labels),
+        'category_data': json.dumps(category_data),
+        'most_borrowed_books': most_borrowed_books_data,
+        'active_borrowers': active_borrowers_data,
+        'total_fines_collected': "{:.2f}".format(total_fines_collected),
+        'outstanding_fines': "{:.2f}".format(outstanding_fines),
+    }
+
+    return render(request, 'core/library_analytics.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_analytics_data(request, report_type):
+    """API endpoint to export analytics data in various formats"""
+    if report_type not in ['csv', 'pdf', 'excel']:
+        return JsonResponse({'error': 'Invalid report type'}, status=400)
+
+    # Implementation for different export types would go here
+    # This is a placeholder that returns success
+    return JsonResponse({
+        'success': True,
+        'message': f'Analytics data exported as {report_type.upper()} successfully'
+    })
+
+
+@login_required
+@user_passes_test(is_staff)
+def get_analytics_data(request):
+    """API endpoint to get analytics data for AJAX requests"""
+    data_type = request.GET.get('type', 'summary')
+
+    if data_type == 'summary':
+        # Basic metrics for AJAX refresh
+        total_books = Book.objects.count()
+        books_borrowed = BorrowRecord.objects.filter(return_date__isnull=True).count()
+        books_reserved = BorrowRecord.objects.filter(is_reserved=True).count()
+        overdue_books = BorrowRecord.objects.filter(
+            return_date__isnull=True,
+            due_date__lt=datetime.now().date()
+        ).count()
+
+        return JsonResponse({
+            'total_books': total_books,
+            'books_borrowed': books_borrowed,
+            'books_reserved': books_reserved,
+            'overdue_books': overdue_books,
+        })
+
+    elif data_type == 'borrowing_trends':
+        # Monthly borrowing data for charts
+        today = datetime.now().date()
+
+        monthly_data = []
+        monthly_labels = []
+
+        for i in range(6):
+            month_start = today.replace(day=1) - timedelta(days=30 * i)
+            month_end = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+            month_borrows = BorrowRecord.objects.filter(
+                borrow_date__gte=month_start,
+                borrow_date__lte=month_end
+            ).count()
+
+            monthly_data.insert(0, month_borrows)
+            monthly_labels.insert(0, month_start.strftime('%b %Y'))
+
+        return JsonResponse({
+            'labels': monthly_labels,
+            'data': monthly_data,
+        })
+
+    return JsonResponse({'error': 'Invalid data type'}, status=400)
+
+

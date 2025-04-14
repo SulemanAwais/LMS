@@ -1,0 +1,270 @@
+{% extends 'base_after_login.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        .card {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-radius: 15px;
+        }
+        .metric {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        canvas {
+            max-height: 300px;
+        }
+        .genre-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+        }
+        /* Genre colors */
+        .genre-fiction { background-color: #fcd34d; color: #92400e; }
+        .genre-nonfiction { background-color: #a7f3d0; color: #065f46; }
+        .genre-mystery { background-color: #c7d2fe; color: #3730a3; }
+        .genre-sci-fi { background-color: #fda4af; color: #9f1239; }
+        .genre-fantasy { background-color: #93c5fd; color: #1e40af; }
+        .genre-biography { background-color: #d8b4fe; color: #6b21a8; }
+        .genre-history { background-color: #bfdbfe; color: #1e3a8a; }
+        .genre-children { background-color: #fde68a; color: #92400e; }
+        .genre-romance { background-color: #fbcfe8; color: #9d174d; }
+        .genre-selfhelp { background-color: #a5b4fc; color: #3730a3; }
+    </style>
+{% endblock %}
+
+{% block title %}Library Analytics & Reports - Smart Library System{% endblock %}
+
+{% block content %}
+    <!-- Page Title -->
+    <div class="mb-5 text-center">
+        <h1 class="lemon-milk text-primary-700 text-3xl">📊 LIBRARY ANALYTICS DASHBOARD</h1>
+        <p class="text-gray-600">Comprehensive overview of library usage and trends</p>
+    </div>
+
+    <!-- Top Metrics Row -->
+    <div class="max-w-6xl mx-auto mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow-sm p-4 text-center">
+                <div class="metric">{{ total_books }}</div>
+                <div class="metric-label">Total Books</div>
+            </div>
+            <div class="bg-blue-50 rounded-lg shadow-sm p-4 text-center">
+                <div class="metric text-blue-700">{{ books_borrowed }}</div>
+                <div class="metric-label">Books Borrowed</div>
+            </div>
+            <div class="bg-amber-50 rounded-lg shadow-sm p-4 text-center">
+                <div class="metric text-amber-700">{{ books_reserved }}</div>
+                <div class="metric-label">Books Reserved</div>
+            </div>
+            <div class="bg-red-50 rounded-lg shadow-sm p-4 text-center">
+                <div class="metric text-red-700">{{ overdue_books }}</div>
+                <div class="metric-label">Overdue Books</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graph Area -->
+    <div class="max-w-6xl mx-auto mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h5 class="text-lg font-bold text-primary-800 mb-3">MONTHLY BORROW TRENDS</h5>
+                <canvas id="borrowTrendChart"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h5 class="text-lg font-bold text-primary-800 mb-3">TOP CATEGORIES</h5>
+                <canvas id="categoryPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Most Borrowed Books -->
+    <div class="max-w-6xl mx-auto mb-8">
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <h5 class="text-lg font-bold text-primary-800 mb-3">📚 MOST BORROWED BOOKS</h5>
+            <div class="overflow-x-auto">
+                <table id="book-table"class="table-auto w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left">#</th>
+                            <th class="px-4 py-2 text-left">Book Title</th>
+                            <th class="px-4 py-2 text-left">Author</th>
+                            <th class="px-4 py-2 text-left">Genre</th>
+                            <th class="px-4 py-2 text-right">Times Borrowed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in most_borrowed_books %}
+                        <tr class="border-t">
+                            <td class="px-4 py-2">{{ forloop.counter }}</td>
+                            <td class="px-4 py-2">{{ book.title }}</td>
+                            <td class="px-4 py-2">{{ book.author }}</td>
+                            <td class="px-4 py-2">
+                                {% if book.genre %}
+                                <span class="genre-badge genre-{{ book.genre|lower }}">{{ book.genre }}</span>
+                                {% else %}
+                                <span class="genre-badge bg-gray-100 text-gray-800">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2 text-right font-medium">{{ book.borrow_count }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-500">No borrowing data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Users -->
+    <div class="max-w-6xl mx-auto mb-8">
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <h5 class="text-lg font-bold text-primary-800 mb-3">👥 ACTIVE BORROWERS</h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for borrower in active_borrowers %}
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-medium text-gray-800">{{ borrower.name }}</h4>
+                            <p class="text-xs text-gray-500">Member since: {{ borrower.join_date|default:"Unknown" }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ borrower.books_borrowed }} books
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-4 text-gray-500">
+                    <p>No active borrowers found</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Financial Summary -->
+    <div class="max-w-6xl mx-auto mb-8">
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <h5 class="text-lg font-bold text-primary-800 mb-3">💰 FINANCIAL OVERVIEW</h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <h6 class="text-green-800 font-medium mb-1">Total Fines Collected</h6>
+                    <p class="text-2xl font-bold text-green-700">£{{ total_fines_collected }}</p>
+                    <p class="text-sm text-green-600 mt-1">From {{ payment_count|default:"0" }} payments</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                    <h6 class="text-red-800 font-medium mb-1">Outstanding Fines</h6>
+                    <p class="text-2xl font-bold text-red-700">£{{ outstanding_fines }}</p>
+                    <p class="text-sm text-red-600 mt-1">From {{ overdue_count|default:"0" }} overdue books</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Define genre colors for consistent use across charts
+        const genreColors = {
+            'fiction': '#fcd34d',
+            'nonfiction': '#a7f3d0',
+            'mystery': '#c7d2fe',
+            'sci-fi': '#fda4af',
+            'fantasy': '#93c5fd',
+            'biography': '#d8b4fe',
+            'history': '#bfdbfe',
+            'children': '#fde68a',
+            'romance': '#fbcfe8',
+            'selfhelp': '#a5b4fc'
+        };
+
+        // Function to get color for a genre
+        function getGenreColor(genre) {
+            const normalizedGenre = genre.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return genreColors[normalizedGenre] || '#94a3b8'; // Default color if not found
+        }
+
+        // Borrow Trend Chart
+        const borrowCtx = document.getElementById('borrowTrendChart').getContext('2d');
+        new Chart(borrowCtx, {
+            type: 'line',
+            data: {
+                labels: {{ monthly_labels|safe }},
+                datasets: [{
+                    label: 'Books Borrowed',
+                    data: {{ monthly_data|safe }},
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Monthly Borrowing Activity'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Pie Chart
+        const catCtx = document.getElementById('categoryPieChart').getContext('2d');
+
+        // Get colors for each category
+        const categoryColors = {{ category_labels|safe }}.map(label => getGenreColor(label));
+
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ category_labels|safe }},
+                datasets: [{
+                    data: {{ category_data|safe }},
+                    backgroundColor: categoryColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Books by Category'
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

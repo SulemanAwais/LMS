@@ -118,6 +118,7 @@
                 <a href="{% url 'search_book' %}" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">book collection</a>
                 {% if request.user.is_staff %}
                     <a href="{% url 'all_payments' %}" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">All Payments</a>
+                    <a href="{% url 'library_analytics' %}" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">Library analytics</a>
                 {% else %}
                     <a href="{% url 'borrowed_books' %}" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">My Borrowed Books</a>
                     <a href="{% url 'financial_overview' %}" class="text-gray-300 hover:text-white font-medium lemon-milk link-hover">My Payments</a>

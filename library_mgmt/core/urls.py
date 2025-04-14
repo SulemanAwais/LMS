@@ -54,5 +54,9 @@ urlpatterns = [
     path('members/<int:member_id>/activate/', activate_member, name='activate_member'),
     # genre
     path('api/genres/', genre_list, name='genre-list'),
-
+    path('access-denied/', access_denied, name='access_denied'),
+    # Reports & Analytics
+    path('analytics/', library_analytics, name='library_analytics'),
+    path('analytics/export/<str:report_type>/', export_analytics_data, name='export_analytics_data'),
+    path('analytics/data/', get_analytics_data, name='get_analytics_data'),
 ]
