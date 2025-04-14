@@ -41,7 +41,6 @@ class User(AbstractUser):
     is_active = models.BooleanField(default=True)
     library = models.ForeignKey(Library, on_delete=models.SET_NULL, null=True, blank=True)
 
-
     def __str__(self):
         return f"{self.username} ({self.role})"
 
@@ -96,7 +95,6 @@ class Book(models.Model):
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
     library = models.ForeignKey(Library, on_delete=models.CASCADE)
 
-
     def __str__(self):
         return f"{self.title} by {self.author}"
 
@@ -115,6 +113,7 @@ class BorrowRecord(models.Model):
     def __str__(self):
         action = "reserved" if self.is_reserved else "borrowed"
         return f"{self.user.username} {action} {self.book.title}"
+
 
 # Fine
 class Fine(models.Model):
