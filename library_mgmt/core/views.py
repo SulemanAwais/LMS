@@ -1,8 +1,9 @@
 import json
+from functools import wraps
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.generic import TemplateView
@@ -10,7 +11,7 @@ from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, get_user, logout
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib import messages
 from django.db.models import Q, Sum, F, Count
 from django.urls import reverse
@@ -30,6 +31,107 @@ from .serializers import GenreSerializer
 User = get_user_model()
 
 
+# Custom Decorators for Access Control
+def staff_required(view_func):
+    """Decorator for views that require staff status"""
+
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+
+        if not request.user.is_staff:
+            request.session['access_denied_message'] = "This action is restricted to library staff only."
+            return redirect('access_denied')
+
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+def member_required(view_func):
+    """Decorator for views that require member status (non-staff)"""
+
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+
+        if request.user.is_staff:
+            request.session[
+                'access_denied_message'] = "This action is for library members only. Staff accounts cannot perform member actions."
+            return redirect('access_denied')
+
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+# For API views that return JSON responses
+def staff_required_api(view_func):
+    """Decorator for API views that require staff status"""
+
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return HttpResponseForbidden("Staff access required")
+
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+def member_required_api(view_func):
+    """Decorator for API views that require member status"""
+
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.is_staff:
+            return HttpResponseForbidden("Member access required")
+
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+# Mixins for class-based views
+class StaffRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.is_staff
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            self.request.session['access_denied_message'] = "This action is restricted to library staff only."
+            return redirect('access_denied')
+        return redirect('login')
+
+
+class MemberRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_authenticated and not self.request.user.is_staff
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            self.request.session['access_denied_message'] = "This action is for library members only."
+            return redirect('access_denied')
+        return redirect('login')
+
+
+# Access Denied View
+@login_required
+def access_denied(request):
+    """View for access denied page"""
+    # Default message
+    message = "You don't have permission to access this resource."
+
+    # Get custom message from session if available
+    if 'access_denied_message' in request.session:
+        message = request.session.pop('access_denied_message')
+
+    return render(request, 'access_denied.html', {'message': message})
+
+
+# Basic views
 def home(request):
     if request.user.is_authenticated:
         print("staff", request.user.is_staff)
@@ -72,7 +174,7 @@ def login_view(request):
     return render(request, 'core/login.html', {'form': form})
 
 
-@login_required()
+@login_required
 def logout_view(request):
     logout(request)
     return redirect('home')
@@ -88,7 +190,6 @@ def signup_view(request):
         password2 = request.POST.get('password2')
         role = request.POST.get('role', 'member')  # Default to member if not specified
         is_staff = True if role == "librarian" else False
-        User = get_user_model()
 
         # Server-side validation
         if User.objects.filter(username=username).exists():
@@ -131,15 +232,18 @@ def signup_view(request):
         return render(request, 'core/signup.html')
 
 
+# Member views
 @login_required
+@member_required
 def member_dashboard_view(request):
     return render(request, 'core/member_dashboard.html')
 
 
+# Staff views
 @login_required
+@staff_required
 def librarian_dashboard_view(request):
     # Get all non-staff users (assuming they are members)
-    User = get_user_model()
     members = User.objects.filter(is_staff=False)
 
     # Prepare list to hold member info with borrow counts
@@ -227,6 +331,7 @@ class BookListView(BaseDatatableView):
 
 
 @login_required
+@member_required_api
 def borrow_book(request, book_id):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=405)
@@ -277,12 +382,14 @@ def borrow_book(request, book_id):
 
 
 @login_required
+@member_required_api
 def total_borrowed_books(request):
     count = BorrowRecord.objects.filter(user=request.user, is_reserved=False).count()
     return JsonResponse({"total_borrowed_books": count})
 
 
 @login_required
+@member_required_api
 def books_due_soon(request):
     today = timezone.now().date()
     upcoming_due_date = today + timedelta(days=4)
@@ -306,6 +413,7 @@ def books_due_soon(request):
 
 
 @login_required
+@member_required_api
 def overdue_books(request):
     today = timezone.now().date()
     overdue_records = BorrowRecord.objects.filter(
@@ -328,6 +436,7 @@ def overdue_books(request):
 
 
 @login_required
+@member_required_api
 def total_payments_made(request):
     total = Payment.objects.filter(user=request.user).aggregate(
         total_amount=Sum('amount')
@@ -336,7 +445,7 @@ def total_payments_made(request):
     return JsonResponse({"total_payments": float(total)})
 
 
-class BorrowedBooksListView(BaseDatatableView):
+class BorrowedBooksListView(MemberRequiredMixin, BaseDatatableView):
     model = BorrowRecord
     columns = ['id', 'title', 'author', 'borrow_date', 'due_date', 'returned', 'renew_count', 'return_date']
 
@@ -374,11 +483,11 @@ class BorrowedBooksListView(BaseDatatableView):
         ]
 
 
-class BorrowedBooksPageView(LoginRequiredMixin, TemplateView):
+class BorrowedBooksPageView(MemberRequiredMixin, TemplateView):
     template_name = 'core/borrowed_books_list.html'
 
 
-class ReturnedBooksListView(BaseDatatableView):
+class ReturnedBooksListView(MemberRequiredMixin, BaseDatatableView):
     model = BorrowRecord
     columns = ['id', 'title', 'author', 'return_date', 'fine_paid']
 
@@ -398,11 +507,11 @@ class ReturnedBooksListView(BaseDatatableView):
         ]
 
 
-class ReturnedBooksPageView(LoginRequiredMixin, TemplateView):
+class ReturnedBooksPageView(MemberRequiredMixin, TemplateView):
     template_name = 'core/return_renew_books_list.html'
 
 
-class FinancialOverviewPageView(LoginRequiredMixin, TemplateView):
+class FinancialOverviewPageView(MemberRequiredMixin, TemplateView):
     template_name = 'core/financial_overview.html'
 
 
@@ -411,7 +520,7 @@ class EditProfileView(LoginRequiredMixin, TemplateView):
 
 
 @require_POST
-@login_required()
+@login_required
 def edit_profile_view(request):
     data = json.loads(request.body)
     user = request.user
@@ -439,6 +548,7 @@ def edit_profile_view(request):
 
 
 @login_required
+@member_required_api
 def return_book_view(request, record_id):
     """
     Handle book return process
@@ -477,6 +587,8 @@ def return_book_view(request, record_id):
     })
 
 
+@login_required
+@member_required_api
 def books_due_today(request):
     today = date.today()
 
@@ -523,6 +635,7 @@ def books_due_today(request):
 
 
 @login_required
+@member_required_api
 def pay_fine_view(request, record_id):
     """
     Handle fine payment process
@@ -579,6 +692,7 @@ def pay_fine_view(request, record_id):
 
 
 @login_required
+@member_required_api
 def renew_book_view(request, record_id):
     try:
         record = get_object_or_404(BorrowRecord, id=record_id, user=request.user)
@@ -601,6 +715,7 @@ def renew_book_view(request, record_id):
 
 
 @login_required
+@member_required_api
 def get_financial_summary(request):
     """
     Get summary of financial information for the user
@@ -665,7 +780,7 @@ def get_financial_summary(request):
 
 
 @login_required
-@staff_member_required
+@staff_required
 def all_payments_view(request):
     payments = Payment.objects.select_related('user', 'fine').all()
 
@@ -693,8 +808,8 @@ def all_payments_view(request):
 
 
 @login_required
+@staff_required_api
 def suspend_member_user(request, member_id):
-    User = get_user_model()
     if request.method == "POST":
         user = get_object_or_404(User, id=member_id)
         user.is_active = not user.is_active
@@ -703,7 +818,8 @@ def suspend_member_user(request, member_id):
     return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
 
 
-@login_required
+
+@ staff_required_api
 @require_http_methods(["DELETE"])
 def delete_book(request, book_id):
     """API endpoint to delete a book"""
@@ -726,6 +842,7 @@ def delete_book(request, book_id):
 
 
 @login_required
+@staff_required_api
 @require_http_methods(["PUT"])
 def update_book(request, book_id):
     """API endpoint to update a book"""
@@ -783,12 +900,8 @@ def view_book(request, book_id):
     return JsonResponse(data)
 
 
-def is_staff(user):
-    return user.is_staff
-
-
 @login_required
-@user_passes_test(is_staff)
+@staff_required_api
 @require_http_methods(["POST"])
 def suspend_member(request, member_id):
     """API endpoint to suspend a member"""
@@ -803,7 +916,7 @@ def suspend_member(request, member_id):
 
 
 @login_required
-@user_passes_test(is_staff)
+@staff_required_api
 @require_http_methods(["POST"])
 def activate_member(request, member_id):
     """API endpoint to activate a member"""
@@ -818,7 +931,7 @@ def activate_member(request, member_id):
 
 
 @login_required
-@user_passes_test(is_staff)
+@staff_required
 def edit_book(request, book_id):
     """View for editing a book"""
     return render(request, 'book_list.html')
@@ -832,17 +945,7 @@ def genre_list(request):
 
 
 @login_required
-def access_denied(request, staff_only=False, member_only=False):
-    """View for access denied page"""
-    context = {
-        'staff_only': staff_only,
-        'member_only': member_only
-    }
-    return render(request, 'access_denied.html', context)
-
-
-@login_required
-@user_passes_test(is_staff)
+@staff_required
 def library_analytics(request):
     """View for library analytics dashboard"""
     # Basic metrics
@@ -890,7 +993,8 @@ def library_analytics(request):
         {
             'title': book.title,
             'author': book.author,
-            'borrow_count': book.borrow_count
+            'borrow_count': book.borrow_count,
+            'genre': book.genre.name if book.genre else 'Unknown'
         }
         for book in most_borrowed_books
     ]
@@ -903,7 +1007,8 @@ def library_analytics(request):
     active_borrowers_data = [
         {
             'name': f"{borrower.first_name} {borrower.last_name}",
-            'books_borrowed': borrower.books_borrowed
+            'books_borrowed': borrower.books_borrowed,
+            'join_date': borrower.date_joined.strftime('%b %d, %Y') if hasattr(borrower, 'date_joined') else None
         }
         for borrower in active_borrowers
     ]
@@ -933,7 +1038,7 @@ def library_analytics(request):
 
 
 @login_required
-@user_passes_test(is_staff)
+@staff_required_api
 def export_analytics_data(request, report_type):
     """API endpoint to export analytics data in various formats"""
     if report_type not in ['csv', 'pdf', 'excel']:
@@ -948,7 +1053,7 @@ def export_analytics_data(request, report_type):
 
 
 @login_required
-@user_passes_test(is_staff)
+@staff_required_api
 def get_analytics_data(request):
     """API endpoint to get analytics data for AJAX requests"""
     data_type = request.GET.get('type', 'summary')
@@ -995,5 +1100,3 @@ def get_analytics_data(request):
         })
 
     return JsonResponse({'error': 'Invalid data type'}, status=400)
-
-

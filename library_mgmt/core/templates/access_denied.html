@@ -1,0 +1,84 @@
+{% extends 'base_after_login.html' %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+    .access-denied-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .access-denied-icon {
+        font-size: 6rem;
+        color: #ef4444;
+        margin-bottom: 1.5rem;
+    }
+
+    .access-denied-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0c4a6e;  /* Updated to primary color */
+        margin-bottom: 1rem;
+    }
+
+    .access-denied-message {
+        font-size: 1.1rem;
+        color: #4b5563;
+        margin-bottom: 2rem;
+    }
+
+    .access-denied-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        color: white;
+        background-color: #0c4a6e;  /* Updated to primary color */
+        border-radius: 0.375rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .access-denied-button:hover {
+        background-color: #075985;  /* Slightly darker shade for hover */
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .access-denied-button:active {
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
+{% block title %}Access Denied - Smart Library System{% endblock %}
+
+{% block content %}
+<div class="access-denied-container">
+    <div class="access-denied-icon">
+        <i class="fas fa-lock"></i>
+    </div>
+
+    <h1 class="access-denied-title lemon-milk">ACCESS DENIED</h1>
+
+    <div class="access-denied-message">
+        <p>{{ message }}</p>
+        <p class="mt-2">You don't have the necessary permissions to access this page or perform this action.</p>
+    </div>
+
+    <div class="mt-6">
+        {% if user.is_staff %}
+            <a href="{% url 'librarian_dashboard' %}" class="access-denied-button">
+                <i class="fas fa-arrow-left mr-2"></i> Return to Librarian Dashboard
+            </a>
+        {% else %}
+            <a href="{% url 'member_dashboard' %}" class="access-denied-button">
+                <i class="fas fa-arrow-left mr-2"></i> Return to Member Dashboard
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
