@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_datatables',
     'datatables',
-    'django_cron',
+    # 'django_cron',
 
 ]
 
