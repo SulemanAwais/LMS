@@ -113,8 +113,8 @@ class BorrowRecord(models.Model):
     is_reserved = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.username} borrowed {self.book.title}"
-
+        action = "reserved" if self.is_reserved else "borrowed"
+        return f"{self.user.username} {action} {self.book.title}"
 
 # Fine
 class Fine(models.Model):

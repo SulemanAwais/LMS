@@ -68,8 +68,8 @@
 #book-table th:nth-child(4), #book-table td:nth-child(4) { width: 8%; } /* Edition */
 #book-table th:nth-child(5), #book-table td:nth-child(5) { width: 12%; } /* Publisher */
 #book-table th:nth-child(6), #book-table td:nth-child(6) { width: 8%; } /* Available Copies */
-#book-table th:nth-child(7), #book-table td:nth-child(7) { width: 10%; } /* Genre */
-#book-table th:nth-child(8), #book-table td:nth-child(8) { width: 10%; } /* Actions */
+#book-table th:nth-child(7), #book-table td:nth-child(7) { width: 8%; } /* Genre */
+#book-table th:nth-child(8), #book-table td:nth-child(8) { width: 8%; } /* Actions */
 #book-table th:nth-child(9), #book-table td:nth-child(9) { width: 12%; } /* Borrow */
 
 /* Action column alignment */

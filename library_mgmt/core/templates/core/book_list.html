@@ -3,6 +3,31 @@
 {% block extra_head %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        /* Fix for cart icon */
+        .action-icon-btn lord-icon {
+            background: transparent !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+        }
+
+        .action-icon-btn.borrow-btn {
+            background-color: transparent;
+            padding: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .action-icon-btn.borrow-btn:hover {
+            transform: scale(1.15);
+            background-color: transparent;
+        }
+
+        .action-icon-btn.taken-btn {
+            opacity: 0.5;
+            background-color: transparent;
+            padding: 0;
+        }
+    </style>
 {% endblock %}
 {% block title %}Search - Smart Library System{% endblock %}
 
@@ -104,7 +129,9 @@
                         <th>Publisher</th>
                         <th>Available</th>
                         <th>Actions</th>
+                        {% if not request.user.is_staff %}
                         <th>Borrow / Reserve</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -115,6 +142,229 @@
 
     <!-- Hidden element to store the staff status -->
     <div id="user-status" data-is-staff="{{ request.user.is_staff }}" class="hidden"></div>
+
+    <!-- View Book Modal -->
+    <div id="view-book-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-95 opacity-0" id="view-modal-content">
+            <!-- Close button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none close-modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="bg-primary-50 p-6 border-b border-primary-100 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-primary-800 lemon-milk">Book Details</h2>
+                <p class="text-gray-600">View complete information about this book</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-primary-800 mb-4">Basic Information</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <span class="text-gray-500 font-medium">Title:</span>
+                                <p class="font-semibold text-gray-800" id="view-title"></p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 font-medium">Author:</span>
+                                <p class="text-gray-800" id="view-author"></p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 font-medium">ISBN:</span>
+                                <p class="text-gray-800" id="view-isbn"></p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 font-medium">Edition:</span>
+                                <p class="text-gray-800" id="view-edition"></p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 font-medium">Publisher:</span>
+                                <p class="text-gray-800" id="view-publisher"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-primary-800 mb-4">Additional Details</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <span class="text-gray-500 font-medium">Year Published:</span>
+                                <p class="text-gray-800" id="view-year"></p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 font-medium">Language:</span>
+                                <p class="text-gray-800" id="view-language"></p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 font-medium">Genre:</span>
+                                <p class="text-gray-800" id="view-genre"></p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 font-medium">Library:</span>
+                                <p class="text-gray-800" id="view-library"></p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 font-medium">Availability:</span>
+                                <p class="text-gray-800">
+                                    <span id="view-available-copies"></span> of <span id="view-total-copies"></span> copies available
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 mt-8">
+                    <button type="button" class="close-modal w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-center lemon-milk btn-hover transition-colors">
+                        CLOSE
+                    </button>
+                    {% if request.user.is_staff %}
+                    <button type="button" id="edit-from-view" class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 lemon-milk btn-hover transition-colors">
+                        EDIT BOOK
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Book Modal -->
+    <div id="edit-book-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-95 opacity-0" id="edit-modal-content">
+            <!-- Close button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none close-modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="bg-primary-50 p-6 border-b border-primary-100 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-primary-800 lemon-milk">Edit Book</h2>
+                <p class="text-gray-600">Update book information</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <form id="edit-book-form">
+                    <input type="hidden" id="edit-book-id" name="book_id">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-4">
+                                <label for="edit-title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                <input type="text" id="edit-title" name="title" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="edit-author" class="block text-sm font-medium text-gray-700 mb-1">Author</label>
+                                <input type="text" id="edit-author" name="author" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="edit-isbn" class="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
+                                <input type="text" id="edit-isbn" name="isbn" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="edit-edition" class="block text-sm font-medium text-gray-700 mb-1">Edition</label>
+                                <input type="text" id="edit-edition" name="edition" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="edit-publisher" class="block text-sm font-medium text-gray-700 mb-1">Publisher</label>
+                                <input type="text" id="edit-publisher" name="publisher" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="mb-4">
+                                <label for="edit-year" class="block text-sm font-medium text-gray-700 mb-1">Year Published</label>
+                                <input type="number" id="edit-year" name="year_published" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="edit-language" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                                <input type="text" id="edit-language" name="language" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="edit-genre" class="block text-sm font-medium text-gray-700 mb-1">Genre</label>
+                                <select id="edit-genre" name="genre" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="edit-total-copies" class="block text-sm font-medium text-gray-700 mb-1">Total Copies</label>
+                                <input type="number" id="edit-total-copies" name="total_copies" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="edit-available-copies" class="block text-sm font-medium text-gray-700 mb-1">Available Copies</label>
+                                <input type="number" id="edit-available-copies" name="available_copies" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 mt-8">
+                        <button type="button" class="close-modal w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-center lemon-milk btn-hover transition-colors">
+                            CANCEL
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-primary-700 text-white rounded-md hover:bg-primary-800 lemon-milk btn-hover transition-colors">
+                            SAVE CHANGES
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Book Modal -->
+    <div id="delete-book-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full relative transform transition-all duration-300 scale-95 opacity-0" id="delete-modal-content">
+            <!-- Close button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none close-modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="bg-red-50 p-6 border-b border-red-100 rounded-t-xl">
+                <div class="flex items-center">
+                    <div class="bg-red-100 rounded-full p-2 mr-3">
+                        <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-red-800 lemon-milk">Delete Book</h2>
+                </div>
+                <p class="text-gray-600 mt-2">This action cannot be undone.</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <p class="text-gray-700 mb-6">Are you sure you want to delete "<span id="delete-book-title" class="font-semibold"></span>"? This will permanently remove the book from the system.</p>
+
+                <input type="hidden" id="delete-book-id">
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button type="button" class="close-modal w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-center lemon-milk btn-hover transition-colors">
+                        CANCEL
+                    </button>
+                    <button type="button" id="confirm-delete" class="w-full sm:w-auto px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 lemon-milk btn-hover transition-colors">
+                        DELETE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Borrow Modal -->
     <div id="borrow-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
@@ -316,7 +566,9 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <script type="text/javascript">
         $(document).ready(function() {
-            var isStaff = $("#user-status").data("is-staff");
+            var rawIsStaff = $("#user-status").data("is-staff");
+            var isStaff = String(rawIsStaff).toLowerCase() === "true";
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             var selectedGenre = "";
             var selectedAvailability = "";
@@ -358,12 +610,12 @@
                         "orderable": false,
                         "className": "text-center",
                         "render": function (data, type, row) {
-                            let viewURL = "#";
-                            let editURL = "#";
-                            let deleteURL = "#";
+                            let viewURL = "{% url 'view_book' 0 %}";
+                            let editURL = "{% url 'edit_book' 0 %}";
+                            let deleteURL = "{% url 'delete_book' 0 %}";
                             let actions = `<div class="flex items-center justify-center space-x-2">`;
                             actions += `
-                            <button class="view-btn" data-bs-toggle="tooltip" title="View Details" onclick="window.location.href='${viewURL.replace('0', row.code)}'">
+                            <button class="view-btn" data-book-id="${row.id}" data-bs-toggle="tooltip" title="View Details">
                                 <lord-icon
                                     src="https://cdn.lordicon.com/tyounuzx.json"
                                     trigger="hover"
@@ -373,7 +625,7 @@
                             </button>`;
                             if (isStaff==true) {
                                 actions += `
-                                <button class="staff-action-btn edit-btn" data-bs-toggle="tooltip" title="Edit Book" onclick="window.location.href='${editURL.replace('0', row.code)}'">
+                                <button class="staff-action-btn edit-btn" data-book-id="${row.id}" data-bs-toggle="tooltip" title="Edit Book">
                                     <lord-icon
                                         src="https://cdn.lordicon.com/wloilxuq.json"
                                         trigger="hover"
@@ -382,7 +634,7 @@
                                     </lord-icon>
                                 </button>`;
                                 actions += `
-                                <button class="staff-action-btn delete-btn" data-bs-toggle="tooltip" title="Delete Book" data-bs-toggle="modal" data-bs-target="#deleteOrder" data-url="${deleteURL.replace('0', row.code)}">
+                                <button class="staff-action-btn delete-btn" data-book-id="${row.id}" data-book-title="${row.title}" data-bs-toggle="tooltip" title="Delete Book">
                                     <lord-icon
                                         src="https://cdn.lordicon.com/gsqxdxog.json"
                                         trigger="hover"
@@ -400,6 +652,7 @@
                         "defaultContent": "-",
                         "orderable": false,
                         "className": "text-center",
+                        "visible": !isStaff, // Only show for non-staff users
                         "render": function (data, type, row) {
                             console.log("Rendering borrow button for book ID:", row.id);
                             if (row.available_copies > 0) {
@@ -457,10 +710,6 @@
             // Custom search input event
             $('#global-search').on('keyup', function() {
                 console.log("Searching for:", this.value);
-                console.log("req", isStaff);
-                console.log("Searching for:", request.user);
-                console.log("Searching for:", request.user.is_staff);
-
                 table.ajax.reload();
             });
 
@@ -575,7 +824,7 @@
             console.log("DataTable initialized.");
 
             // Modal functionality
-            const modal = document.getElementById('borrow-modal');
+            const borrowModal = document.getElementById('borrow-modal');
             const modalContent = document.getElementById('modal-content');
             const closeModal = document.getElementById('close-modal');
             const cancelBorrow = document.getElementById('cancel-borrow');
@@ -587,6 +836,14 @@
             const borrowPeriodSelect = document.getElementById('borrow_period');
             const reservePeriodSelect = document.getElementById('reserve_period');
             const dueDatePreview = document.getElementById('due-date-preview');
+
+            // View, Edit, Delete modals
+            const viewBookModal = document.getElementById('view-book-modal');
+            const viewModalContent = document.getElementById('view-modal-content');
+            const editBookModal = document.getElementById('edit-book-modal');
+            const editModalContent = document.getElementById('edit-modal-content');
+            const deleteBookModal = document.getElementById('delete-book-modal');
+            const deleteModalContent = document.getElementById('delete-modal-content');
 
             // Current book ID being borrowed
             let currentBookId = null;
@@ -612,9 +869,9 @@
                 dueDatePreview.textContent = formattedDate;
             }
 
-            // Close modal function
-            function closeModalFunc() {
-                modal.classList.add('hidden');
+            // Close modal function for borrow modal
+            function closeBorrowModal() {
+                borrowModal.classList.add('hidden');
                 modalContent.classList.remove('modal-enter');
                 // Reset form
                 document.getElementById('agreement').checked = false;
@@ -625,14 +882,249 @@
             }
 
             // Close modal when clicking close button or cancel
-            closeModal.addEventListener('click', closeModalFunc);
-            cancelBorrow.addEventListener('click', closeModalFunc);
+            closeModal.addEventListener('click', closeBorrowModal);
+            cancelBorrow.addEventListener('click', closeBorrowModal);
 
             // Close modal when clicking outside
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeModalFunc();
+            borrowModal.addEventListener('click', function(e) {
+                if (e.target === borrowModal) {
+                    closeBorrowModal();
                 }
+            });
+
+            // Close modals when clicking close buttons
+            document.querySelectorAll('.close-modal').forEach(button => {
+                button.addEventListener('click', function() {
+                    viewBookModal.classList.add('hidden');
+                    viewModalContent.classList.remove('modal-enter');
+                    editBookModal.classList.add('hidden');
+                    editModalContent.classList.remove('modal-enter');
+                    deleteBookModal.classList.add('hidden');
+                    deleteModalContent.classList.remove('modal-enter');
+                });
+            });
+
+            // Close modals when clicking outside
+            viewBookModal.addEventListener('click', function(e) {
+                if (e.target === viewBookModal) {
+                    viewBookModal.classList.add('hidden');
+                    viewModalContent.classList.remove('modal-enter');
+                }
+            });
+
+            editBookModal.addEventListener('click', function(e) {
+                if (e.target === editBookModal) {
+                    editBookModal.classList.add('hidden');
+                    editModalContent.classList.remove('modal-enter');
+                }
+            });
+
+            deleteBookModal.addEventListener('click', function(e) {
+                if (e.target === deleteBookModal) {
+                    deleteBookModal.classList.add('hidden');
+                    deleteModalContent.classList.remove('modal-enter');
+                }
+            });
+
+            // View Book button click
+            $(document).on('click', '.view-btn', function() {
+                const bookId = $(this).data('book-id');
+                console.log("Viewing book ID:", bookId);
+
+                // Fetch book details
+                $.ajax({
+                    url: `/api/books/${bookId}/`,
+                    type: "GET",
+                    success: function(book) {
+                        // Populate modal with book details
+                        $('#view-title').text(book.title);
+                        $('#view-author').text(book.author);
+                        $('#view-isbn').text(book.isbn);
+                        $('#view-edition').text(book.edition);
+                        $('#view-publisher').text(book.publisher);
+                        $('#view-year').text(book.year_published);
+                        $('#view-language').text(book.language);
+                        $('#view-genre').text(book.genre_name);
+                        $('#view-library').text(book.library_name);
+                        $('#view-available-copies').text(book.available_copies);
+                        $('#view-total-copies').text(book.total_copies);
+
+                        // Show modal
+                        viewBookModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            viewModalContent.classList.add('modal-enter');
+                        }, 10);
+
+                        // Set up edit button in view modal
+                        $('#edit-from-view').off('click').on('click', function() {
+                            viewBookModal.classList.add('hidden');
+                            viewModalContent.classList.remove('modal-enter');
+                            openEditModal(bookId);
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error fetching book details:", error);
+                        alert("Error loading book details. Please try again.");
+                    }
+                });
+            });
+
+            // Edit Book button click
+            $(document).on('click', '.edit-btn', function() {
+                const bookId = $(this).data('book-id');
+                openEditModal(bookId);
+            });
+
+            function openEditModal(bookId) {
+                console.log("Editing book ID:", bookId);
+
+                // Fetch book details and genre list
+                $.when(
+                    $.ajax({
+                        url: `/api/books/${bookId}/`,
+                        type: "GET"
+                    }),
+                    $.ajax({
+                        url: "/api/genres/",
+                        type: "GET"
+                    })
+                ).done(function(bookResponse, genresResponse) {
+                    const book = bookResponse[0];
+                    const genres = genresResponse[0];
+
+                    // Populate genre dropdown
+                    const genreSelect = $('#edit-genre');
+                    genreSelect.empty();
+
+                    genres.forEach(genre => {
+                        const option = $('<option></option>')
+                            .attr('value', genre.id)
+                            .text(genre.name);
+
+                        if (genre.id === book.genre) {
+                            option.attr('selected', 'selected');
+                        }
+
+                        genreSelect.append(option);
+                    });
+
+                    // Populate form fields
+                    $('#edit-book-id').val(book.id);
+                    $('#edit-title').val(book.title);
+                    $('#edit-author').val(book.author);
+                    $('#edit-isbn').val(book.isbn);
+                    $('#edit-edition').val(book.edition);
+                    $('#edit-publisher').val(book.publisher);
+                    $('#edit-year').val(book.year_published);
+                    $('#edit-language').val(book.language);
+                    $('#edit-total-copies').val(book.total_copies);
+                    $('#edit-available-copies').val(book.available_copies);
+
+                    // Show modal
+                    editBookModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        editModalContent.classList.add('modal-enter');
+                    }, 10);
+                }).fail(function(xhr, status, error) {
+                    console.error("Error fetching data:", error);
+                    alert("Error loading book details. Please try again.");
+                });
+            }
+
+            // Submit edit form
+            $('#edit-book-form').on('submit', function(e) {
+                e.preventDefault();
+
+                const bookId = $('#edit-book-id').val();
+                const formData = {
+                    title: $('#edit-title').val(),
+                    author: $('#edit-author').val(),
+                    isbn: $('#edit-isbn').val(),
+                    edition: $('#edit-edition').val(),
+                    publisher: $('#edit-publisher').val(),
+                    year_published: $('#edit-year').val(),
+                    language: $('#edit-language').val(),
+                    genre: $('#edit-genre').val(),
+                    total_copies: $('#edit-total-copies').val(),
+                    available_copies: $('#edit-available-copies').val()
+                };
+
+                $.ajax({
+                    url: `/api/books/${bookId}/update/`,
+                    type: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify(formData),
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    },
+                    success: function(response) {
+                        console.log("Book updated:", response);
+
+                        // Close modal
+                        editBookModal.classList.add('hidden');
+                        editModalContent.classList.remove('modal-enter');
+
+                        // Show success notification
+                        successTitle.textContent = "Book Updated!";
+                        successMessage.textContent = "Book information has been successfully updated.";
+                        showSuccessNotification();
+
+                        // Refresh the table
+                        table.ajax.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error updating book:", error);
+                        alert("Error updating book. Please try again.");
+                    }
+                });
+            });
+
+            // Delete Book button click
+            $(document).on('click', '.delete-btn', function() {
+                const bookId = $(this).data('book-id');
+                const bookTitle = $(this).data('book-title');
+                console.log("Deleting book ID:", bookId);
+
+                // Set book ID and title in delete modal
+                $('#delete-book-id').val(bookId);
+                $('#delete-book-title').text(bookTitle);
+
+                // Show modal
+                deleteBookModal.classList.remove('hidden');
+                setTimeout(() => {
+                    deleteModalContent.classList.add('modal-enter');
+                }, 10);
+            });
+
+            // Confirm delete button click
+            $('#confirm-delete').on('click', function() {
+                const bookId = $('#delete-book-id').val();
+
+                $.ajax({
+                    url: `/api/books/${bookId}/delete/`,
+                    type: "DELETE",
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    },
+                    success: function(response) {
+                        console.log("Book deleted:", response);
+
+                        // Close modal
+                        deleteBookModal.classList.add('hidden');
+                        deleteModalContent.classList.remove('modal-enter');
+
+                        // Show success notification
+                        successTitle.textContent = "Book Deleted!";
+                        successMessage.textContent = "Book has been successfully removed from the system.";
+                        showSuccessNotification();
+
+                        // Refresh the table
+                        table.ajax.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error deleting book:", error);
+                    }
+                });
             });
 
             // Confirm borrow
@@ -672,7 +1164,7 @@
                     },
                     success: function(response) {
                         console.log("Request success:", response);
-                        closeModalFunc();
+                        closeBorrowModal();
 
                         // Update success message based on request type
                         if (isReserve) {
@@ -742,7 +1234,7 @@
                 updateDueDatePreview();
 
                 // Show modal
-                modal.classList.remove('hidden');
+                borrowModal.classList.remove('hidden');
                 setTimeout(() => {
                     modalContent.classList.add('modal-enter');
                 }, 10);

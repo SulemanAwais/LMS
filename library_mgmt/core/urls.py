@@ -14,8 +14,13 @@ urlpatterns = [
     path("suspend-member/<int:member_id>/", suspend_member_user, name="suspend_member"),
     path('librarian-dashboard/', librarian_dashboard_view, name='librarian_dashboard'),
 
-    path('search/', search_book_view, name='search_book'),
+    path('collection/', search_book_view, name='search_book'),
     path('books/', BookListView.as_view(), name='books_list'),
+    # Book details and actions
+    path('api/books/<int:book_id>/', view_book, name='view_book'),
+    path('books/<int:book_id>/edit/', edit_book , name='edit_book'),
+    path('api/books/<int:book_id>/update/', update_book, name='update_book'),
+    path('api/books/<int:book_id>/delete/', delete_book, name='delete_book'),
     path('api/borrowed-books/due-today/',books_due_today, name='books_due_today'),
 
     path('borrow/<int:book_id>/', borrow_book, name='borrow_book'),
@@ -43,5 +48,10 @@ urlpatterns = [
     # Financial Overview URLs
     path('financial-overview/', FinancialOverviewPageView.as_view(), name='financial_overview'),
     path('financial-summary/', get_financial_summary, name='financial_summary'),
+    # Member actions
+    path('members/<int:member_id>/suspend/', suspend_member, name='suspend_member'),
+    path('members/<int:member_id>/activate/', activate_member, name='activate_member'),
+    # genre
+    path('api/genres/', genre_list, name='genre-list'),
 
 ]

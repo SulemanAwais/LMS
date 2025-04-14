@@ -1,17 +1,10 @@
-# serializers.py
+# library/serializers.py
+
 from rest_framework import serializers
-from .models import Book
+from .models import Genre
 
 
-class BookSerializer(serializers.ModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Book
-        fields = [
-            "title",
-            "author",
-            "isbn",
-            "edition",
-            "publisher",
-            "available_copies",
-            "genre",
-        ]
+        model = Genre
+        fields = ['id', 'name']

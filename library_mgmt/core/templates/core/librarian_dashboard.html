@@ -4,6 +4,51 @@
 {% block extra_head %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        /* Improved suspend/activate button styles */
+        .suspend-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 90px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .suspend-button.suspend {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .suspend-button.suspend:hover {
+            background-color: #fecaca;
+            transform: translateY(-1px);
+        }
+
+        .suspend-button.suspend:active {
+            background-color: #fca5a5;
+            transform: translateY(0);
+        }
+
+        .suspend-button.activate {
+            background-color: #dcfce7;
+            color: #15803d;
+        }
+
+        .suspend-button.activate:hover {
+            background-color: #bbf7d0;
+            transform: translateY(-1px);
+        }
+
+        .suspend-button.activate:active {
+            background-color: #86efac;
+            transform: translateY(0);
+        }
+    </style>
 {% endblock %}
 
 {% block title %}All Members - Smart Library System{% endblock %}
@@ -82,12 +127,10 @@
                             <div class="text-sm text-gray-500">0</div>
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <button data-member-id="{{ member.id }}" class="suspend-button px-3 py-1 rounded-md transition-colors {% if member.is_active %}bg-red-100 text-red-700 hover:bg-red-200{% else %}bg-green-100 text-green-700 hover:bg-green-200{% endif %}">
-                                    {% if member.is_active %}Suspend{% else %}Activate{% endif %}
-                                </button>
-                            </div>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                            <button data-member-id="{{ member.id }}" class="suspend-button {% if member.is_active %}suspend{% else %}activate{% endif %}">
+                                {% if member.is_active %}Suspend{% else %}Activate{% endif %}
+                            </button>
                         </td>
                     </tr>
                     {% empty %}
@@ -148,28 +191,30 @@
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
 
-        searchButton.addEventListener('click', function() {
-            const searchTerm = searchInput.value.trim();
-            const filterValue = document.getElementById('filter-select').value;
+        if (searchInput && searchButton) {
+            searchButton.addEventListener('click', function() {
+                const searchTerm = searchInput.value.trim();
+                const filterValue = document.getElementById('filter-select').value;
 
-            let url = '?';
-            if (searchTerm) {
-                url += `search=${encodeURIComponent(searchTerm)}`;
-            }
+                let url = '?';
+                if (searchTerm) {
+                    url += `search=${encodeURIComponent(searchTerm)}`;
+                }
 
-            if (filterValue && filterValue !== 'all') {
-                if (searchTerm) url += '&';
-                url += `filter=${encodeURIComponent(filterValue)}`;
-            }
+                if (filterValue && filterValue !== 'all') {
+                    if (searchTerm) url += '&';
+                    url += `filter=${encodeURIComponent(filterValue)}`;
+                }
 
-            window.location.href = url;
-        });
+                window.location.href = url;
+            });
 
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchButton.click();
-            }
-        });
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchButton.click();
+                }
+            });
+        }
 
         // Suspend/Activate functionality
         const suspendButtons = document.querySelectorAll('.suspend-button');
@@ -177,7 +222,7 @@
         suspendButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const memberId = this.dataset.memberId;
-                const action = this.textContent.trim() === 'Suspend' ? 'suspend' : 'activate';
+                const action = this.classList.contains('suspend') ? 'suspend' : 'activate';
 
                 if (confirm(`Are you sure you want to ${action} this member?`)) {
                     // Send AJAX request to suspend/activate member
@@ -194,12 +239,12 @@
                             // Update button text and styling
                             if (action === 'suspend') {
                                 this.textContent = 'Activate';
-                                this.classList.remove('bg-red-100', 'text-red-700', 'hover:bg-red-200');
-                                this.classList.add('bg-green-100', 'text-green-700', 'hover:bg-green-200');
+                                this.classList.remove('suspend');
+                                this.classList.add('activate');
                             } else {
                                 this.textContent = 'Suspend';
-                                this.classList.remove('bg-green-100', 'text-green-700', 'hover:bg-green-200');
-                                this.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+                                this.classList.remove('activate');
+                                this.classList.add('suspend');
                             }
                         } else {
                             alert('Error: ' + data.error);

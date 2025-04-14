@@ -4,22 +4,30 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.views.generic import TemplateView
 from django_datatables_view.base_datatable_view import BaseDatatableView
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, get_user, logout
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
 from django.db.models import Q, Sum, F
 from django.urls import reverse
+from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from django.utils import timezone
 from datetime import timedelta, date
+
+from rest_framework.response import Response
+
 from .forms import LoginForm
-from .models import Book, BorrowRecord, Fine, Payment
+from .models import Book, BorrowRecord, Fine, Payment, Genre
 from django.contrib.auth import get_user_model
+
+from .serializers import GenreSerializer
+
+User = get_user_model()
 
 
 def home(request):
@@ -37,21 +45,27 @@ def login_view(request):
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            # Check if the user's account is active
+            if not user.is_active:
+                messages.error(request, "Your account has been suspended by the librarian.")
+                return redirect('login')  # Redirect back to the login page
+
             login(request, user)
             dashboard_url = reverse('home')
             return redirect(dashboard_url)
         else:
             if '__all__' in form.errors:
-                messages.error(request, "Incorrect email or password. Please try again.")
+                print("error in login", form.errors)
+                messages.error(request, "Incorrect username or password. Please try again.")
             else:
                 # Show individual field errors (e.g., username or password missing)
                 for field in form.errors:
                     for error in form.errors[field]:
                         messages.error(request, f"{field.capitalize()}: {error}")
     else:
-        form = LoginForm()
-    return render(request, 'core/login.html', {'form': form})
+        form = AuthenticationForm()
 
+    return render(request, 'core/login.html', {'form': form})
 
 @login_required()
 def logout_view(request):
@@ -563,10 +577,11 @@ def renew_book_view(request, record_id):
     try:
         record = get_object_or_404(BorrowRecord, id=record_id, user=request.user)
 
-        if record.returned:
-            return JsonResponse({"error": "Cannot renew a returned book."}, status=400)
-
+        if not record.returned:
+            return JsonResponse({"error": "Cannot renew a already borrowed book."}, status=400)
+        record.returned=False
         record.due_date += timedelta(days=7)
+        record.return_date = None
         record.renew_count += 1
         record.save()
 
@@ -678,3 +693,131 @@ def suspend_member_user(request, member_id):
         user.save()
         return JsonResponse({"status": "success", "is_active": user.is_active})
     return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_book(request, book_id):
+    """API endpoint to delete a book"""
+    book = get_object_or_404(Book, id=book_id)
+
+    try:
+        # Check if book can be deleted (no active borrows)
+        active_borrows = BorrowRecord.objects.filter(book=book, returned=False).count()
+        if active_borrows > 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'Cannot delete book with active borrows'
+            }, status=400)
+
+        book.delete()
+        return JsonResponse({'success': True, 'message': 'Book deleted successfully'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+@require_http_methods(["PUT"])
+def update_book(request, book_id):
+    """API endpoint to update a book"""
+    book = get_object_or_404(Book, id=book_id)
+
+    try:
+        data = json.loads(request.body)
+
+        # Update book fields
+        book.title = data.get('title', book.title)
+        book.author = data.get('author', book.author)
+        book.isbn = data.get('isbn', book.isbn)
+        book.edition = data.get('edition', book.edition)
+        book.publisher = data.get('publisher', book.publisher)
+        book.year_published = data.get('year_published', book.year_published)
+        book.language = data.get('language', book.language)
+        book.total_copies = data.get('total_copies', book.total_copies)
+        book.available_copies = data.get('available_copies', book.available_copies)
+
+        # Update genre if provided
+        genre_id = data.get('genre')
+        if genre_id:
+            book.genre = get_object_or_404(Genre, id=genre_id)
+
+        book.save()
+
+        return JsonResponse({'success': True, 'message': 'Book updated successfully'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+def view_book(request, book_id):
+    """API endpoint to get book details"""
+    book = get_object_or_404(Book, id=book_id)
+
+    data = {
+        'id': book.id,
+        'title': book.title,
+        'author': book.author,
+        'isbn': book.isbn,
+        'edition': book.edition,
+        'publisher': book.publisher,
+        'year_published': book.year_published,
+        'language': book.language,
+        'total_copies': book.total_copies,
+        'available_copies': book.available_copies,
+        'genre': book.genre.id if book.genre else None,
+        'genre_name': book.genre.name if book.genre else 'Unknown',
+        'library': book.library.id if book.library else None,
+        'library_name': book.library.name if book.library else 'Unknown',
+    }
+
+    return JsonResponse(data)
+
+
+def is_staff(user):
+    return user.is_staff
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+def suspend_member(request, member_id):
+    """API endpoint to suspend a member"""
+    member = get_object_or_404(User, id=member_id)
+
+    try:
+        member.is_active = False
+        member.save()
+        return JsonResponse({'success': True, 'message': 'Member suspended successfully'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+@user_passes_test(is_staff)
+@require_http_methods(["POST"])
+def activate_member(request, member_id):
+    """API endpoint to activate a member"""
+    member = get_object_or_404(User, id=member_id)
+
+    try:
+        member.is_active = True
+        member.save()
+        return JsonResponse({'success': True, 'message': 'Member activated successfully'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+@user_passes_test(is_staff)
+def edit_book(request, book_id):
+    """View for editing a book"""
+    return render(request, 'book_list.html')
+
+
+@api_view(['GET'])
+def genre_list(request):
+    genres = Genre.objects.all()
+    serializer = GenreSerializer(genres, many=True)
+    return Response(serializer.data)

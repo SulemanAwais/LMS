@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_datatables',
     'datatables',
-
+    'django_cron',
 
 ]
 
@@ -133,3 +133,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
+
+CRON_CLASSES = [
+    "core.cron.ClearReservedBooksJob",
+]
