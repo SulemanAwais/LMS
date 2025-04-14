@@ -1,94 +1,98 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="csrf-token" content="{{ csrf_token }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
 
-<title>{% block title %}Smart Library System{% endblock %}</title>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    primary: {
-                        50: '#f0f9ff',
-                        100: '#e0f2fe',
-                        200: '#bae6fd',
-                        300: '#7dd3fc',
-                        400: '#38bdf8',
-                        500: '#0ea5e9',
-                        600: '#0284c7',
-                        700: '#0369a1',
-                        800: '#075985',
-                        900: '#0c4a6e',
-                    },
-                    secondary: {
-                        50: '#fff7ed',
-                        100: '#ffedd5',
-                        200: '#fed7aa',
-                        300: '#fdba74',
-                        400: '#fb923c',
-                        500: '#f97316',
-                        600: '#ea580c',
-                        700: '#c2410c',
-                        800: '#9a3412',
-                        900: '#7c2d12',
+    <title>{% block title %}Smart Library System{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                        }
                     }
                 }
             }
         }
-    }
-</script>
-<!-- Lemon Milk Font -->
-<link href="https://fonts.cdnfonts.com/css/lemon-milk" rel="stylesheet">
-<!-- Lordicon -->
-<script src="https://cdn.lordicon.com/lordicon.js"></script>
+    </script>
+    <!-- Lemon Milk Font -->
+    <link href="https://fonts.cdnfonts.com/css/lemon-milk" rel="stylesheet">
+    <!-- Lordicon -->
+    <script src="https://cdn.lordicon.com/lordicon.js"></script>
 
-{% block extra_head %}{% endblock %}
-<!-- Custom Styles -->
-<style>
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8f5fa;
-    }
-    h1, h2, h3, h4, h5, h6, .lemon-milk {
-        font-family: 'LEMON MILK', sans-serif;
-        letter-spacing: 0.05em;
-    }
-    .btn-hover {
-        transition: all 0.3s ease;
-    }
-    .btn-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    .btn-hover:active {
-        transform: translateY(0);
-        box-shadow: 0 5px 10px -3px rgba(0, 0, 0, 0.1), 0 2px 3px -2px rgba(0, 0, 0, 0.05);
-    }
-    .link-hover {
-        position: relative;
-    }
-    .link-hover::after {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 2px;
-        bottom: -2px;
-        left: 0;
-        background-color: currentColor;
-        transition: width 0.3s ease;
-    }
-    .link-hover:hover::after {
-        width: 100%;
-    }
-    .link-hover:active {
-        opacity: 0.8;
-    }
-</style>
+    {% block extra_head %}{% endblock %}
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f5fa;
+        }
+        h1, h2, h3, h4, h5, h6, .lemon-milk {
+            font-family: 'LEMON MILK', sans-serif;
+            letter-spacing: 0.05em;
+        }
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-hover:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px -3px rgba(0, 0, 0, 0.1), 0 2px 3px -2px rgba(0, 0, 0, 0.05);
+        }
+        .link-hover {
+            position: relative;
+        }
+        .link-hover::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: currentColor;
+            transition: width 0.3s ease;
+        }
+        .link-hover:hover::after {
+            width: 100%;
+        }
+        .link-hover:active {
+            opacity: 0.8;
+        }
+    </style>
+    {% load static %}
+
+    <!-- Add our responsive styles -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
 <body class="min-h-screen text-gray-800 flex flex-col">
     <!-- Header/Navigation -->
@@ -121,6 +125,7 @@
                 <a href="{% url 'logout' %}" class="px-4 py-2 border border-white rounded-md text-white hover:bg-white hover:text-primary-900 lemon-milk btn-hover transition-colors">LOGOUT</a>
                 <a href="{% url 'edit_profile_page' %}" class="px-4 py-2 border border-white rounded-md text-white hover:bg-white hover:text-primary-900 lemon-milk btn-hover transition-colors">EDIT PROFILE</a>
             </div>
+            <!-- Mobile menu button will be added by JavaScript -->
         </div>
     </header>
 
@@ -180,5 +185,118 @@
             </div>
         </div>
     </footer>
+
+    <!-- Add our mobile menu JavaScript -->
+    <script>
+        // Mobile menu functionality
+        document.addEventListener("DOMContentLoaded", () => {
+          // Create mobile menu button
+          const headerContainer = document.querySelector("header .container")
+          const mobileMenuButton = document.createElement("button")
+          mobileMenuButton.className = "mobile-menu-button"
+          mobileMenuButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          `
+          headerContainer.appendChild(mobileMenuButton)
+
+          // Create mobile menu
+          const mobileMenu = document.createElement("div")
+          mobileMenu.className = "mobile-menu"
+          mobileMenu.innerHTML = `
+            <div class="mobile-menu-content">
+              <div class="mobile-menu-header">
+                <div class="flex items-center">
+                  <div class="bg-secondary-400 p-2 rounded-lg mr-3">
+                    <lord-icon
+                      src="https://cdn.lordicon.com/wxhtpnnk.json"
+                      trigger="hover"
+                      colors="primary:#ffffff"
+                      style="width:24px;height:24px">
+                    </lord-icon>
+                  </div>
+                  <span class="text-lg font-bold text-white lemon-milk">SMART LIBRARY</span>
+                </div>
+                <button class="mobile-menu-close">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <nav class="mobile-nav-links">
+                <!-- Will be populated with cloned nav links -->
+              </nav>
+              <div class="mobile-action-buttons">
+                <!-- Will be populated with cloned action buttons -->
+              </div>
+            </div>
+          `
+          document.body.appendChild(mobileMenu)
+
+          // Clone navigation links to mobile menu
+          const desktopNav = document.querySelector("header nav")
+          const mobileNav = document.querySelector(".mobile-nav-links")
+          if (desktopNav && mobileNav) {
+            const navLinks = desktopNav.querySelectorAll("a")
+            navLinks.forEach((link) => {
+              const clonedLink = link.cloneNode(true)
+              clonedLink.classList.remove("link-hover")
+              mobileNav.appendChild(clonedLink)
+            })
+          }
+
+          // Clone action buttons to mobile menu
+          const actionButtons = document.querySelector("header .flex.items-center.space-x-3")
+          const mobileActionButtons = document.querySelector(".mobile-action-buttons")
+          if (actionButtons && mobileActionButtons) {
+            const buttons = actionButtons.querySelectorAll("a")
+            buttons.forEach((button) => {
+              const clonedButton = button.cloneNode(true)
+              clonedButton.classList.remove("btn-hover")
+              if (button.textContent.trim() === "LOGOUT") {
+                clonedButton.className = "bg-white text-primary-900 rounded-md"
+              } else {
+                clonedButton.className =
+                  "border border-white text-white rounded-md hover:bg-white hover:text-primary-900 transition-colors"
+              }
+              mobileActionButtons.appendChild(clonedButton)
+            })
+          }
+
+          // Toggle mobile menu
+          mobileMenuButton.addEventListener("click", () => {
+            mobileMenu.classList.add("active")
+            document.body.style.overflow = "hidden" // Prevent scrolling when menu is open
+          })
+
+          // Close mobile menu
+          const closeButton = document.querySelector(".mobile-menu-close")
+          if (closeButton) {
+            closeButton.addEventListener("click", () => {
+              mobileMenu.classList.remove("active")
+              document.body.style.overflow = "" // Restore scrolling
+            })
+          }
+
+          // Close menu when clicking outside
+          mobileMenu.addEventListener("click", (e) => {
+            if (e.target === mobileMenu) {
+              mobileMenu.classList.remove("active")
+              document.body.style.overflow = ""
+            }
+          })
+
+          // Wrap tables for horizontal scrolling
+          const tables = document.querySelectorAll("#book-table")
+          tables.forEach((table) => {
+            const wrapper = document.createElement("div")
+            wrapper.className = "table-container"
+            table.parentNode.insertBefore(wrapper, table)
+            wrapper.appendChild(table)
+          })
+        })
+
+    </script>
 </body>
 </html>
