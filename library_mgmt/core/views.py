@@ -668,3 +668,13 @@ def all_payments_view(request):
         'total_payments': total_payments,
         'monthly_payments': monthly_payments
     })
+
+@login_required
+def suspend_member_user(request, member_id):
+    User = get_user_model()
+    if request.method == "POST":
+        user = get_object_or_404(User, id=member_id)
+        user.is_active = not user.is_active
+        user.save()
+        return JsonResponse({"status": "success", "is_active": user.is_active})
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)

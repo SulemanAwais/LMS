@@ -11,7 +11,7 @@ urlpatterns = [
     path('profile/', EditProfileView.as_view(), name='edit_profile_page'),
     path('edit-profile/', edit_profile_view, name='edit_profile'),
     path('dashboard/', member_dashboard_view, name='member_dashboard'),
-    # path('librarian-dashboard/', member_dashboard_view, name='librarian_dashboard'),
+    path("suspend-member/<int:member_id>/", suspend_member_user, name="suspend_member"),
     path('librarian-dashboard/', librarian_dashboard_view, name='librarian_dashboard'),
 
     path('search/', search_book_view, name='search_book'),
