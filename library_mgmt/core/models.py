@@ -93,7 +93,7 @@ class Book(models.Model):
     total_copies = models.PositiveIntegerField()
     available_copies = models.PositiveIntegerField()
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
-    library = models.ForeignKey(Library, on_delete=models.CASCADE)
+    library = models.ForeignKey(Library, on_delete=models.CASCADE, default=1)
 
     def __str__(self):
         return f"{self.title} by {self.author}"

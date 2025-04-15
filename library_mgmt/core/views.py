@@ -815,6 +815,55 @@ def suspend_member_user(request, member_id):
     return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
 
 
+@login_required
+@staff_required_api
+@require_http_methods(["POST"])
+def add_book(request):
+    """API endpoint to add a new book"""
+    try:
+        print("qdkjeqwekjqw")
+        data = json.loads(request.body)
+        print("data ", data)
+        # Validate required fields
+        required_fields = ['title', 'author', 'isbn', 'edition', 'publisher',
+                           'year_published', 'language', 'total_copies', 'available_copies']
+
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Missing required field: {field}'
+                }, status=400)
+
+        # Get genre if provided
+        genre = None
+        if 'genre' in data and data['genre']:
+            genre = get_object_or_404(Genre, id=data['genre'])
+
+        # Create the book
+        book = Book.objects.create(
+            title=data['title'],
+            author=data['author'],
+            isbn=data['isbn'],
+            edition=data['edition'],
+            publisher=data['publisher'],
+            year_published=int(data['year_published']),
+            language=data['language'],
+            total_copies=int(data['total_copies']),
+            available_copies=int(data['available_copies']),
+            genre=genre,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Book added successfully',
+            'book_id': book.id
+        })
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
 
 @ staff_required_api
 @require_http_methods(["DELETE"])

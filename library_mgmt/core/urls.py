@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/books/<int:book_id>/update/', update_book, name='update_book'),
     path('api/books/<int:book_id>/delete/', delete_book, name='delete_book'),
     path('api/borrowed-books/due-today/',books_due_today, name='books_due_today'),
+    path('api/books/add/', add_book, name='add_book'),
 
     path('borrow/<int:book_id>/', borrow_book, name='borrow_book'),
     path("api/borrowed-books/count/", total_borrowed_books, name="total-borrowed-books"),

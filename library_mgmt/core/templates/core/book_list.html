@@ -27,7 +27,29 @@
             background-color: transparent;
             padding: 0;
         }
+        /* Add Book button styling */
+        .add-book-btn {
+            background-color: #0c4a6e;
+            color: white;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out, transform 0.1s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
+        .add-book-btn:hover {
+            background-color: #075985;
+            transform: translateY(-1px);
+        }
+
+        .add-book-btn:active {
+            transform: translateY(0);
+        }
     </style>
 {% endblock %}
 {% block title %}Search - Smart Library System{% endblock %}
@@ -115,7 +137,17 @@
             </div>
         </div>
     </div>
-
+    <!-- Add Book Button (Only visible to staff) -->
+    {% if request.user.is_staff %}
+    <div class="max-w-6xl mx-auto mb-4 flex justify-end">
+        <button id="add-book-btn" class="add-book-btn bg-primary-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Add New Book
+        </button>
+    </div>
+    {% endif %}
     <!-- Book Table -->
     <div id="main-content" class="bg-white rounded-lg shadow-md p-4 mb-8 overflow-hidden">
         <div class="overflow-x-auto table-container">
@@ -543,6 +575,97 @@
         </div>
     </div>
 
+        <!-- Add Book Modal -->
+    <div id="add-book-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative transform transition-all duration-300 scale-95 opacity-0" id="add-modal-content">
+            <!-- Close button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none close-modal">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="bg-primary-50 p-6 border-b border-primary-100 rounded-t-xl">
+                <h2 class="text-2xl font-bold text-primary-800 lemon-milk">Add New Book</h2>
+                <p class="text-gray-600">Enter book information to add to the library</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <form id="add-book-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-4">
+                                <label for="add-title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                <input type="text" id="add-title" name="title" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="add-author" class="block text-sm font-medium text-gray-700 mb-1">Author</label>
+                                <input type="text" id="add-author" name="author" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="add-isbn" class="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
+                                <input type="text" id="add-isbn" name="isbn" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="add-edition" class="block text-sm font-medium text-gray-700 mb-1">Edition</label>
+                                <input type="text" id="add-edition" name="edition" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="add-publisher" class="block text-sm font-medium text-gray-700 mb-1">Publisher</label>
+                                <input type="text" id="add-publisher" name="publisher" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="mb-4">
+                                <label for="add-year" class="block text-sm font-medium text-gray-700 mb-1">Year Published</label>
+                                <input type="number" id="add-year" name="year_published" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="add-language" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                                <input type="text" id="add-language" name="language" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="add-genre" class="block text-sm font-medium text-gray-700 mb-1">Genre</label>
+                                <select id="add-genre" name="genre" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="add-total-copies" class="block text-sm font-medium text-gray-700 mb-1">Total Copies</label>
+                                <input type="number" id="add-total-copies" name="total_copies" min="1" value="1" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="add-available-copies" class="block text-sm font-medium text-gray-700 mb-1">Available Copies</label>
+                                <input type="number" id="add-available-copies" name="available_copies" min="0" value="1" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 mt-8">
+                        <button type="button" class="close-modal w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-center lemon-milk btn-hover transition-colors">
+                            CANCEL
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-primary-700 text-white rounded-md hover:bg-primary-800 lemon-milk btn-hover transition-colors">
+                            ADD BOOK
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Success Notification -->
     <div id="success-notification" class="fixed bottom-5 right-5 bg-white rounded-lg shadow-lg p-4 flex items-center transform transition-all duration-300 translate-y-20 opacity-0 invisible max-w-md">
         <div class="bg-green-100 rounded-full p-2 mr-4">
@@ -721,6 +844,101 @@
             "responsive": true,
             "pageLength": 10,
             "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]]
+        });
+        // Add Book Modal
+        const addBookModal = document.getElementById('add-book-modal');
+        const addModalContent = document.getElementById('add-modal-content');
+
+        // Add Book button click event
+        $('#add-book-btn').on('click', function() {
+            // Fetch genre list
+            $.ajax({
+                url: "/api/genres/",
+                type: "GET",
+                success: function(genres) {
+                    // Populate genre dropdown
+                    const genreSelect = $('#add-genre');
+                    genreSelect.empty();
+
+                    // Add a default "Select Genre" option
+                    genreSelect.append($('<option></option>').attr('value', '').text('Select Genre'));
+
+                    genres.forEach(genre => {
+                        const option = $('<option></option>')
+                            .attr('value', genre.id)
+                            .text(genre.name);
+                        genreSelect.append(option);
+                    });
+
+                    // Show modal
+                    addBookModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        addModalContent.classList.add('modal-enter');
+                    }, 10);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching genres:", error);
+                    alert("Error loading genres. Please try again.");
+                }
+            });
+        });
+
+        // Close Add Book modal
+        addBookModal.addEventListener('click', function(e) {
+            if (e.target === addBookModal) {
+                addBookModal.classList.add('hidden');
+                addModalContent.classList.remove('modal-enter');
+            }
+        });
+
+        // Add Book form submission
+        $('#add-book-form').on('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                title: $('#add-title').val(),
+                author: $('#add-author').val(),
+                isbn: $('#add-isbn').val(),
+                edition: $('#add-edition').val(),
+                publisher: $('#add-publisher').val(),
+                year_published: $('#add-year').val(),
+                language: $('#add-language').val(),
+                genre: $('#add-genre').val(),
+                total_copies: $('#add-total-copies').val(),
+                available_copies: $('#add-available-copies').val()
+            };
+
+            $.ajax({
+                url: "/api/books/add/",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(formData),
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                success: function(response) {
+                    console.log("Book added:", response);
+
+                    // Close modal
+                    addBookModal.classList.add('hidden');
+                    addModalContent.classList.remove('modal-enter');
+
+                    // Reset form
+                    $('#add-book-form')[0].reset();
+
+                    // Show success notification
+                    successTitle.textContent = "Book Added!";
+                    successMessage.textContent = "New book has been successfully added to the library.";
+                    showSuccessNotification();
+
+                    // Refresh the table
+                    table.ajax.reload();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error adding book:", error);
+                    alert("Error adding book. Please try again.");
+                }
+            });
         });
 
         // Custom search input event
