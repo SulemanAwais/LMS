@@ -47,16 +47,16 @@ class User(AbstractUser):
 
 # Genre model
 class Genre(models.Model):
-    FICTION = 'fiction'
-    NONFICTION = 'nonfiction'
-    MYSTERY = 'mystery'
-    SCIFI = 'sci-fi'
-    FANTASY = 'fantasy'
-    BIOGRAPHY = 'biography'
-    HISTORY = 'history'
-    CHILDREN = 'children'
-    ROMANCE = 'romance'
-    SELFHELP = 'selfhelp'
+    FICTION = 'Fiction'
+    NONFICTION = 'Non-fiction'
+    MYSTERY = 'Mystery'
+    SCIFI = 'Sci-fi'
+    FANTASY = 'Fantasy'
+    BIOGRAPHY = 'Biography'
+    HISTORY = 'History'
+    CHILDREN = 'Children'
+    ROMANCE = 'Romance'
+    SELFHELP = 'Selfhelp'
 
     GENRE_CHOICES = [
         (FICTION, 'Fiction'),

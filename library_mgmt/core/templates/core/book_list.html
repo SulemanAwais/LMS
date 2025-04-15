@@ -599,9 +599,10 @@
                     "className": "text-center",
                     "render": function(data, type, row) {
                         if (!data) return '<span class="genre-badge bg-gray-100 text-gray-800">Unknown</span>';
-
+                        console.log("anfjkwbefk")
+                        console.log(data)
                         // Normalize genre name for CSS class (lowercase, remove special chars)
-                        const normalizedGenre = data.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const normalizedGenre = data;
 
                         // Return colored badge
                         return `<span class="genre-badge genre-${normalizedGenre}">${data}</span>`;

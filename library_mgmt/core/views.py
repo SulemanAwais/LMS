@@ -1,14 +1,12 @@
 import json
 from functools import wraps
-
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.generic import TemplateView
 from django_datatables_view.base_datatable_view import BaseDatatableView
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, get_user, logout
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponseForbidden
@@ -22,7 +20,6 @@ from datetime import timedelta, date, datetime
 
 from rest_framework.response import Response
 
-from .forms import LoginForm
 from .models import Book, BorrowRecord, Fine, Payment, Genre
 from django.contrib.auth import get_user_model
 
